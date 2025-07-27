@@ -38,51 +38,86 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
 
   return (
     <div className="relative z-50">
-      <Avatar
-        placeholderInitials="RR"
-        img={user?.image}
-        alt="User Avatar"
-        rounded
-        status="online"
-        className="hover:cursor-pointer"
-        onClick={toggleDropdown}
-      />
+      {/* Avatar with modern styling */}
+      <div className="relative">
+        <div 
+          className="w-10 h-10 rounded-full overflow-hidden cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all duration-300 transform hover:scale-105"
+          onClick={toggleDropdown}
+        >
+          {user?.image ? (
+            <img 
+              src={user.image} 
+              alt="User Avatar" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
+        </div>
+        
+        {/* Online status indicator */}
+        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+      </div>
+
+      {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-2 mt-1 bg-white border border-gray-200 rounded-md shadow-lg w-max-content p-3">
-          <div className="p-3 border-b-2 border-red-200">
-            <span className="block text-xs text-gray-900 font-bold">
-              {user?.name || "Name"}
-            </span>
-            <span className="block truncate text-xs text-gray-500 font-medium">
-              {user?.email || "Email ID"}
-            </span>
+        <div className="dropdown-modern absolute right-0 mt-3 w-64 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
+          {/* User Info Section */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-full overflow-hidden">
+                {user?.image ? (
+                  <img 
+                    src={user.image} 
+                    alt="User Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.name || "User Name"}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.email || "user@example.com"}
+                </p>
+              </div>
+            </div>
           </div>
-          <ul className="p-1">
-            <Link to="/profile">
-              <li className="px-4 py-3 hover:bg-gray-100 cursor-pointer rounded-lg flex items-center gap-2 relative dropdown-items">
-                <IoPerson />
-                Profile
-              </li>
+
+          {/* Menu Items */}
+          <div className="py-1">
+            <Link to="/profile" className="dropdown-item flex items-center space-x-3">
+              <IoPerson className="w-4 h-4 text-blue-500" />
+              <span>Profile</span>
             </Link>
-            <hr />
-            <li className="px-4 py-3 hover:bg-gray-100 cursor-pointer rounded-lg flex items-center gap-2 relative dropdown-items">
-              <FaAddressCard />
-              Contact Card
-            </li>
-            <hr />
-            <li className="px-4 py-3 hover:bg-gray-100 cursor-pointer rounded-lg flex items-center gap-2 relative dropdown-items">
-              <IoMdSettings />
-              Settings
-            </li>
-            <hr />
-            <li
-              className="px-4 py-3 hover:bg-gray-100 cursor-pointer rounded-lg flex items-center gap-2 relative dropdown-items"
+            
+            <div className="dropdown-item flex items-center space-x-3">
+              <FaAddressCard className="w-4 h-4 text-green-500" />
+              <span>Contact Card</span>
+            </div>
+            
+            <Link to="/settings" className="dropdown-item flex items-center space-x-3">
+              <IoMdSettings className="w-4 h-4 text-gray-500" />
+              <span>Settings</span>
+            </Link>
+            
+            <div className="border-t border-gray-100 my-1"></div>
+            
+            <div 
+              className="dropdown-item flex items-center space-x-3 text-red-600 hover:bg-red-50 hover:border-red-500"
               onClick={onLogout}
             >
-              <IoLogOut />
-              Log Out
-            </li>
-          </ul>
+              <IoLogOut className="w-4 h-4" />
+              <span>Sign out</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

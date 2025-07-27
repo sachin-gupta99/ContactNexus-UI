@@ -1,10 +1,7 @@
-import React, { useRef } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "flowbite-react";
+import { useRef } from "react";
 import { HiMail } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
-import logo_red from "../assets/logo_red.png";
-import TextField from "./TextField";
+import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import { loginRoute } from "../api/authApi";
 import { setAuthToken } from "../util/helper";
 import { router } from "../App";
@@ -15,7 +12,6 @@ import { userActions } from "../store/user";
 const SignInForm = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
-
   const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
@@ -33,7 +29,6 @@ const SignInForm = () => {
       const password = passwordRef.current.value;
 
       const formData = new FormData();
-
       formData.append("email", email);
       formData.append("password", password);
 
@@ -41,7 +36,6 @@ const SignInForm = () => {
     
       if (response?.data?.data?.token) {
         setAuthToken(response?.data?.data?.token);
-
         router.navigate("/home");
         dispatch(
           toastActions.setToast({
@@ -68,52 +62,66 @@ const SignInForm = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="bg-white p-8 rounded shadow-lg w-96">
-        <div className="flex flex-col gap-4">
-          <img src={logo_red} alt="Logo" width={200} className="self-center" />
-
-          <h1 className="text-xl font-bold text-center text-gray-500">
-            Sign In
-          </h1>
-        </div>
-        <form className="mt-6" onSubmit={handleSubmit}>
-          <TextField
-            name="username"
-            label="Email"
-            placeholder="johndoe@gmail.com"
-            icon={HiMail}
-            type="email"
-            ref={emailRef}
-          />
-
-          <TextField
-            name="password"
-            label="Password"
-            placeholder="Strong password"
-            icon={RiLockPasswordFill}
-            type="password"
-            ref={passwordRef}
-          />
-
-          <Button
-            gradientMonochrome="failure"
-            className="font-bold w-full text-white"
-            type="submit"
-          >
-            Sign In
-          </Button>
-
-          <p className="flex justify-between p-2">
-            Don't have an account?
-            <span>
-              <Link to="/auth?mode=signup" className="text-blue-500">
-                Sign Up
-              </Link>
-            </span>
-          </p>
-        </form>
+    <div className="w-full">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+          Welcome back
+        </h2>
+        <p className="text-slate-300">Sign in to your account to continue</p>
       </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <div className="mb-2 block">
+            <Label htmlFor="email" value="Email address" className="text-zinc-200" />
+          </div>
+          <TextInput
+            ref={emailRef}
+            id="email"
+            type="email"
+            icon={HiMail}
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+
+        <div>
+          <div className="mb-2 block">
+            <Label htmlFor="password" value="Password" className="text-zinc-200" />
+          </div>
+          <TextInput
+            ref={passwordRef}
+            id="password"
+            type="password"
+            icon={RiLockPasswordFill}
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Checkbox id="remember" />
+            <Label htmlFor="remember" className="text-sm text-slate-300">
+              Remember me
+            </Label>
+          </div>
+          <a href="#" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
+            Forgot your password?
+          </a>
+        </div>
+
+        <Button 
+          type="submit" 
+          gradientDuoTone="cyanToBlue" 
+          className="w-full font-semibold"
+          size="lg"
+        >
+          Sign in
+        </Button>
+      </form>
     </div>
   );
 };

@@ -1,10 +1,9 @@
 import React, { useRef } from "react";
-import { HiMail } from "react-icons/hi";
+import { HiMail, HiUser } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { Link } from "react-router-dom";
-import { Button } from "flowbite-react";
+import { Button, Label, TextInput } from "flowbite-react";
 import logo_red from "../assets/logo_red.png";
-import TextField from "./TextField";
 import { IoIosPerson } from "react-icons/io";
 import { FaArrowLeft, FaPhoneAlt } from "react-icons/fa";
 import { FaArrowRight } from "react-icons/fa";

@@ -3,9 +3,8 @@ import HomePageLogo from "../assets/HomePagePic.jpg";
 import MeetingDifferentPeople from "../assets/MeetingDifferentPeople.jpg";
 import SaveContacts from "../assets/SaveContacts.jpg";
 import ShareContact from "../assets/ShareContact.jpg";
-import { FaArrowRight } from "react-icons/fa";
-import { Button } from "flowbite-react";
-import { Card } from "flowbite-react";
+import { FaArrowRight, FaShieldAlt, FaShareAlt, FaStar, FaUsers, FaHeart, FaGlobe } from "react-icons/fa";
+import { Button, Card, Badge } from "flowbite-react";
 
 const Home = () => {
   useEffect(() => {
@@ -13,55 +12,128 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-12">
-      <div className="flex justify-around p-4 m-4 bg-gradient-to-r from-red-300 to-red-500 rounded-lg shadow-lg">
-        <div className="flex flex-col justify-center gap-8">
-          <h1 className="text-5xl font-bold text-white">
-            One place for all your contacts
-          </h1>
-          <p className="text-xl text-gray-100">
-            Manage and browse through all your contacts with a few clicks.
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+                    One place for all your 
+                    <span className="ml-5 bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+                       contacts
+                    </span>
+                  </h1>
+                  <p className="text-xl text-slate-200 leading-relaxed max-w-lg">
+                    Manage, organize, and share all your contacts seamlessly with our modern contact management platform.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    gradientDuoTone="cyanToBlue" 
+                    size="xl"
+                    className="font-semibold"
+                  >
+                    <span className="flex items-center gap-2">
+                      Get Started Free <FaArrowRight />
+                    </span>
+                  </Button>
+                  <Button 
+                    color="light" 
+                    size="xl"
+                    className="font-semibold"
+                  >
+                    Learn More
+                  </Button>
+                </div>
+              </div>
 
-        <div className="flex justify-center items-center">
-          <img
-            src={HomePageLogo}
-            alt="Home Page Logo"
-            className="w-96 rounded-lg shadow-md"
-          />
+              <div className="relative">
+                <Card className="transform rotate-3 hover:rotate-0 transition-transform duration-500 border-0 shadow-2xl">
+                  <img
+                    src={HomePageLogo}
+                    alt="Contact Management"
+                    className="w-full rounded-lg"
+                  />
+                </Card>
+                {/* Floating elements */}
+                <div className="absolute -top-4 -right-4 bg-white/20 backdrop-blur-sm rounded-full p-4 animate-pulse">
+                  <FaUsers className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute -bottom-4 -left-4 bg-white/20 backdrop-blur-sm rounded-full p-4 animate-pulse">
+                  <FaHeart className="w-8 h-8 text-pink-300" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <div className="flex flex-col items-center gap-4 border-r-2 border-red-500 px-8">
-          <span className="text-3xl font-bold text-red-500">1M+</span>
-          <span className="text-xl font-bold text-gray-500">
-            Contacts shared
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-4 border-r-2 border-red-500 px-8">
-          <span className="text-3xl font-bold text-red-500">95%</span>
-          <span className="text-xl font-bold text-gray-500">
-            User Satisfaction
-          </span>
-        </div>
-        <div className="flex flex-col items-center gap-4 px-8">
-          <span className="text-3xl font-bold text-red-500">10k</span>
-          <span className="text-xl font-bold text-gray-500">Active Users</span>
+      {/* Stats Section */}
+      <div className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
+              <div className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                1M+
+              </div>
+              <div className="text-xl font-semibold text-gray-600">
+                Contacts Shared
+              </div>
+              <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mt-4 rounded-full"></div>
+            </Card>
+            
+            <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
+              <div className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                95%
+              </div>
+              <div className="text-xl font-semibold text-gray-600">
+                User Satisfaction
+              </div>
+              <div className="w-20 h-1 bg-gradient-to-r from-green-500 to-blue-600 mx-auto mt-4 rounded-full"></div>
+            </Card>
+            
+            <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
+              <div className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                50K+
+              </div>
+              <div className="text-xl font-semibold text-gray-600">
+                Active Users
+              </div>
+              <div className="w-20 h-1 bg-gradient-to-r from-purple-500 to-pink-600 mx-auto mt-4 rounded-full"></div>
+            </Card>
+          </div>
         </div>
       </div>
 
+      {/* Process Section */}
       <StandardProcedure />
 
-      <div className="mt-12 m-4">
+      {/* Features Section */}
+      <div className="py-20">
         <PortalReachSpecifics />
+      </div>
 
-        <div className="flex justify-center mt-12 gap-4">
-          <Button gradientMonochrome="failure" className="font-bold">
-            <div className="flex items-center gap-2 text-md">
+      {/* CTA Section */}
+      <div className="py-20 bg-gradient-to-r from-blue-600 to-purple-700">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+            Ready to revolutionize your contact management?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who trust Contact Nexus for their networking needs.
+          </p>
+          <Button 
+            gradientDuoTone="purpleToBlue" 
+            size="xl"
+            className="font-semibold mx-auto"
+          >
+            <span className="flex items-center gap-2">
               Get Started - It's Free <FaArrowRight />
-            </div>
+            </span>
           </Button>
         </div>
       </div>
@@ -73,88 +145,137 @@ export default Home;
 
 const StandardProcedure = () => {
   return (
-    <div className="mt-12 m-4">
-      <div className="flex flex-col items-center gap-4">
-        <h1 className="text-4xl font-bold text-red-500">Standard Procedure</h1>
-        <p className="text-xl text-gray-500 text-center mb-7">
-          The standard procedure to use Contact Nexus is as follows.
-        </p>
-      </div>
+    <div className="py-20 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+            How It Works
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Get started with Contact Nexus in three simple steps and transform the way you manage your professional network.
+          </p>
+        </div>
 
-      <div className="flex justify-center gap-8 w-4/5 mx-auto">
-        <StandardProcedureCards
-          feature="Meet with different people"
-          description="Meeting with different people can help you to learn new things and improve your skills."
-          featureImage={MeetingDifferentPeople}
-        />
-        <StandardProcedureCards
-          feature="Save Contacts on Contact Nexus"
-          description="Saving contacts on Contact Nexus can help you to manage your contacts easily."
-          featureImage={SaveContacts}
-        />
-        <StandardProcedureCards
-          feature="Share Contacts with others"
-          description="Sharing contacts plays a vital role in building a strong network."
-          featureImage={ShareContact}
-        />
+        <div className="grid md:grid-cols-3 gap-8">
+          <StandardProcedureCards
+            step="1"
+            feature="Meet New People"
+            description="Connect with professionals at events, meetings, and social gatherings to expand your network."
+            featureImage={MeetingDifferentPeople}
+            icon={<FaUsers className="w-8 h-8" />}
+          />
+          <StandardProcedureCards
+            step="2"
+            feature="Save Contacts Instantly"
+            description="Quickly save and organize contact information with our intuitive contact management system."
+            featureImage={SaveContacts}
+            icon={<FaShieldAlt className="w-8 h-8" />}
+          />
+          <StandardProcedureCards
+            step="3"
+            feature="Share & Collaborate"
+            description="Effortlessly share contacts with team members and build stronger professional relationships."
+            featureImage={ShareContact}
+            icon={<FaShareAlt className="w-8 h-8" />}
+          />
+        </div>
       </div>
     </div>
   );
 };
 
-const StandardProcedureCards = ({ feature, description, featureImage }) => {
+const StandardProcedureCards = ({ step, feature, description, featureImage, icon }) => {
   return (
-    <Card
-      className="max-w-sm"
-      imgAlt="Meaningful alt text for an image that is not purely decorative"
-      imgSrc={featureImage}
-    >
-      <h5 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-        {feature}
-      </h5>
-      <p className="font-normal text-gray-700 dark:text-gray-400">
-        {description}
-      </p>
-    </Card>
+    <div className="group">
+      <Card className="overflow-hidden h-full hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
+        <div className="relative">
+          <img 
+            src={featureImage} 
+            alt={feature}
+            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <Badge 
+            color="purple" 
+            size="lg"
+            className="absolute top-4 left-4 font-bold text-lg"
+          >
+            {step}
+          </Badge>
+          <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm rounded-full p-3 text-white">
+            {icon}
+          </div>
+        </div>
+        <div className="p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+            {feature}
+          </h3>
+          <p className="text-gray-600 leading-relaxed">
+            {description}
+          </p>
+        </div>
+      </Card>
+    </div>
   );
 };
 
 const PortalReachSpecifics = () => {
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col items-center gap-4">
-        <h1 className="text-4xl font-bold text-red-500">Feature Specifics</h1>
-        <p className="text-xl text-gray-500 text-center">
-          Contact Nexus provides you with the following feature specifics.
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+          Why Choose Contact Nexus?
+        </h2>
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          Discover the powerful features that make Contact Nexus the perfect solution for modern professionals.
         </p>
       </div>
-      <div className="flex justify-center gap-8">
+      
+      <div className="grid md:grid-cols-3 gap-8">
         <PortalReachSpecificsCard
-          title="Secure storage"
-          description="Store your contacts securely and access them from anywhere."
+          title="Enterprise Security"
+          description="Bank-level encryption and secure cloud storage ensure your contacts are always protected and accessible."
+          icon={<FaShieldAlt className="w-12 h-12 text-blue-500 mb-4" />}
+          gradientColor="blue"
         />
         <PortalReachSpecificsCard
-          title="Business Card Sharing"
-          description="Share your business card with others and grow your network."
+          title="Smart Sharing"
+          description="Share digital business cards instantly via QR codes, links, or direct contact transfer."
+          icon={<FaShareAlt className="w-12 h-12 text-purple-500 mb-4" />}
+          gradientColor="purple"
         />
         <PortalReachSpecificsCard
-          title="Mark as Favourite"
-          description="Mark your favourite contacts and access them quickly."
+          title="Favorite Contacts"
+          description="Mark important contacts as favorites and access them quickly with our smart organization system."
+          icon={<FaStar className="w-12 h-12 text-yellow-500 mb-4" />}
+          gradientColor="yellow"
         />
       </div>
     </div>
   );
 };
 
-const PortalReachSpecificsCard = ({ title, description }) => {
+const PortalReachSpecificsCard = ({ title, description, icon, gradientColor }) => {
+  const gradientClasses = {
+    blue: "hover:from-blue-50 hover:to-cyan-50",
+    purple: "hover:from-purple-50 hover:to-pink-50", 
+    yellow: "hover:from-yellow-50 hover:to-orange-50"
+  };
+
   return (
-    <Card className="max-w-sm">
-      <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-        {title}
-      </h5>
-      <p className="font-normal text-gray-700 dark:text-gray-400">
-        {description}
-      </p>
-    </Card>
+    <div className="group">
+      <Card className={`h-full text-center relative overflow-hidden hover:scale-105 transition-all duration-300 border-0 shadow-lg hover:bg-gradient-to-br ${gradientClasses[gradientColor]}`}>
+        <div className="p-8">
+          <div className="flex justify-center mb-4">
+            {icon}
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+            {title}
+          </h3>
+          <p className="text-gray-600 leading-relaxed">
+            {description}
+          </p>
+        </div>
+      </Card>
+    </div>
   );
 };
