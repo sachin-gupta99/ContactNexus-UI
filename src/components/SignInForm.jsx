@@ -1,9 +1,7 @@
-import React, { useRef } from "react";
-import { Link } from "react-router-dom";
-import { HiMail, HiEye, HiEyeOff } from "react-icons/hi";
+import { useRef } from "react";
+import { HiMail } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
-import logo_red from "../assets/logo_red.png";
-import TextField from "./TextField";
+import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import { loginRoute } from "../api/authApi";
 import { setAuthToken } from "../util/helper";
 import { router } from "../App";
@@ -67,91 +65,62 @@ const SignInForm = () => {
     <div className="w-full">
       {/* Header */}
       <div className="text-center mb-8">
-        <img src={logo_red} alt="Contact Nexus" className="h-12 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back</h2>
-        <p className="text-gray-600">Sign in to your account to continue</p>
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+          Welcome back
+        </h2>
+        <p className="text-slate-300">Sign in to your account to continue</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email address
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <HiMail className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              ref={emailRef}
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder="Enter your email"
-            />
+          <div className="mb-2 block">
+            <Label htmlFor="email" value="Email address" className="text-zinc-200" />
           </div>
+          <TextInput
+            ref={emailRef}
+            id="email"
+            type="email"
+            icon={HiMail}
+            placeholder="Enter your email"
+            required
+          />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-            Password
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <RiLockPasswordFill className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              ref={passwordRef}
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-              placeholder="Enter your password"
-            />
+          <div className="mb-2 block">
+            <Label htmlFor="password" value="Password" className="text-zinc-200" />
           </div>
+          <TextInput
+            ref={passwordRef}
+            id="password"
+            type="password"
+            icon={RiLockPasswordFill}
+            placeholder="Enter your password"
+            required
+          />
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+          <div className="flex items-center gap-2">
+            <Checkbox id="remember" />
+            <Label htmlFor="remember" className="text-sm text-slate-300">
               Remember me
-            </label>
+            </Label>
           </div>
-
-          <div className="text-sm">
-            <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
-              Forgot your password?
-            </a>
-          </div>
+          <a href="#" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
+            Forgot your password?
+          </a>
         </div>
 
-        <button
-          type="submit"
-          className="btn-primary w-full"
+        <Button 
+          type="submit" 
+          gradientDuoTone="cyanToBlue" 
+          className="w-full font-semibold"
+          size="lg"
         >
           Sign in
-        </button>
-
-        <div className="text-center">
-          <span className="text-gray-600">Don't have an account? </span>
-          <Link 
-            to="/auth?mode=signup" 
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-          >
-            Sign up
-          </Link>
-        </div>
+        </Button>
       </form>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import SignInForm from "../components/SignInForm";
-import SignUpForm from "../components/SignUpForm";
+import SimpleSignUpForm from "../components/SimpleSignUpForm";
 import { router } from "../App";
 import { getBackgroundRoute } from "../api/generalApi";
 
@@ -50,21 +50,21 @@ const Auth = () => {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
+        <div className={`w-full ${mode === "signup" ? "max-w-4xl" : "max-w-md"}`}>
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-gray-100 mb-2 font-heading tracking-wider">
               Contact Nexus
             </h1>
-            <p className="text-white/80">
+            {/* <p className="text-white/80">
               {mode === "signin" ? "Welcome back!" : "Join our community"}
-            </p>
+            </p> */}
           </div>
 
           {/* Form Container */}
           <div className="glass rounded-2xl p-8">
             {mode === "signin" && <SignInForm />}
-            {mode === "signup" && <SignUpForm />}
+            {mode === "signup" && <SimpleSignUpForm />}
           </div>
 
           {/* Switch Mode */}

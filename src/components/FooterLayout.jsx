@@ -10,8 +10,8 @@ const FooterLayout = () => {
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <img src={logo} alt="Contact Nexus" className="h-8 w-auto" />
-              <span className="text-xl font-bold gradient-text">Contact Nexus</span>
+              {/* <img src={logo} alt="Contact Nexus" className="h-8 w-auto" /> */}
+              <span className="text-xl font-bold text-gray-100 font-heading tracking-wider">Contact Nexus</span>
             </div>
             <p className="text-gray-300 mb-6 max-w-md">
               The modern way to manage and share your professional contacts. 

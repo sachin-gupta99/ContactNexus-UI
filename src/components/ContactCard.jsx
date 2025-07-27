@@ -1,12 +1,13 @@
 import React from "react";
 import { FaPhone, FaEnvelope, FaStar, FaRegStar, FaShare } from "react-icons/fa";
+import { Card, Button, Badge } from "flowbite-react";
 
 const ContactCard = ({ name, work, image, number, email, isFavorite = false, onToggleFavorite, onShare }) => {
   return (
-    <div className="card-modern group overflow-hidden">
+    <Card className="max-w-sm group hover:scale-105 transition-transform duration-300">
       {/* Header with image and favorite button */}
       <div className="relative">
-        <div className="h-48 overflow-hidden">
+        <div className="h-48 overflow-hidden rounded-t-lg">
           <img 
             alt={`${name}`} 
             src={image || "https://via.placeholder.com/300x200?text=No+Image"} 
@@ -16,38 +17,44 @@ const ContactCard = ({ name, work, image, number, email, isFavorite = false, onT
         
         {/* Favorite and Share buttons */}
         <div className="absolute top-4 right-4 flex space-x-2">
-          <button
+          <Button
+            size="xs"
+            color="light"
             onClick={(e) => {
               e.preventDefault();
               onToggleFavorite?.();
             }}
-            className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all duration-200"
+            className="!p-2 rounded-full"
           >
             {isFavorite ? (
               <FaStar className="w-4 h-4 text-yellow-500" />
             ) : (
               <FaRegStar className="w-4 h-4 text-gray-600" />
             )}
-          </button>
-          <button
+          </Button>
+          <Button
+            size="xs"
+            color="light"
             onClick={(e) => {
               e.preventDefault();
               onShare?.();
             }}
-            className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all duration-200"
+            className="!p-2 rounded-full"
           >
             <FaShare className="w-4 h-4 text-gray-600" />
-          </button>
+          </Button>
         </div>
 
         {/* Status indicator */}
-        <div className="absolute bottom-4 left-4 px-3 py-1 bg-green-500 text-white text-xs rounded-full font-medium">
-          Available
+        <div className="absolute bottom-4 left-4">
+          <Badge color="success" size="sm">
+            Available
+          </Badge>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="p-5">
         <div className="mb-4">
           <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
             {name}
@@ -56,7 +63,7 @@ const ContactCard = ({ name, work, image, number, email, isFavorite = false, onT
         </div>
 
         {/* Contact Information */}
-        <div className="space-y-3">
+        <div className="space-y-3 mb-6">
           <div className="flex items-center space-x-3 text-sm">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
               <FaPhone className="w-3 h-3 text-blue-600" />
@@ -79,16 +86,24 @@ const ContactCard = ({ name, work, image, number, email, isFavorite = false, onT
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex space-x-2">
-          <button className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105">
+        <div className="flex space-x-2">
+          <Button
+            gradientDuoTone="cyanToBlue"
+            size="sm"
+            className="flex-1 font-medium"
+          >
             Message
-          </button>
-          <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200">
+          </Button>
+          <Button
+            color="gray"
+            size="sm"
+            className="flex-1 font-medium"
+          >
             Call
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

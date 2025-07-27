@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ContactCard from "../components/ContactCard";
 import contact from "../assets/contact.jpg";
-import { Pagination } from "flowbite-react";
+import { Pagination, TextInput, Button, Badge } from "flowbite-react";
 import { FaSearch, FaPlus, FaFilter, FaUserFriends } from "react-icons/fa";
 
 const Contacts = () => {
@@ -95,25 +95,30 @@ const Contacts = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold gradient-text mb-2">
+              <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
                 Your Contacts
               </h1>
-              <p className="text-gray-600 flex items-center space-x-2">
-                <FaUserFriends className="w-4 h-4" />
-                <span>{filteredContacts.length} contacts found</span>
-              </p>
+              <div className="flex items-center space-x-2">
+                <FaUserFriends className="w-5 h-5 text-gray-600" />
+                <Badge color="purple" size="lg">
+                  {filteredContacts.length} contacts found
+                </Badge>
+              </div>
             </div>
 
-            <button className="btn-primary inline-flex items-center space-x-2 w-fit">
-              <FaPlus className="w-4 h-4" />
-              <span>Add Contact</span>
-            </button>
+            <Button 
+              gradientDuoTone="purpleToBlue"
+              className="w-fit font-semibold"
+            >
+              <FaPlus className="w-4 h-4 mr-2" />
+              Add Contact
+            </Button>
           </div>
         </div>
 
@@ -121,41 +126,34 @@ const Contacts = () => {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Bar */}
-            <div className="flex-1 relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaSearch className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
+            <div className="flex-1">
+              <TextInput
+                id="search"
                 type="text"
+                icon={FaSearch}
                 placeholder="Search contacts..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full"
               />
             </div>
 
             {/* Filter Buttons */}
             <div className="flex space-x-2">
-              <button
+              <Button
+                color={filterType === "all" ? "purple" : "gray"}
                 onClick={() => handleFilterChange("all")}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                  filterType === "all"
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                }`}
+                className="font-medium"
               >
                 All
-              </button>
-              <button
+              </Button>
+              <Button
+                color={filterType === "favorites" ? "purple" : "gray"}
                 onClick={() => handleFilterChange("favorites")}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                  filterType === "favorites"
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                }`}
+                className="font-medium"
               >
                 Favorites
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -189,10 +187,13 @@ const Contacts = () => {
                 : "Get started by adding your first contact."
               }
             </p>
-            <button className="btn-primary inline-flex items-center space-x-2">
-              <FaPlus className="w-4 h-4" />
-              <span>Add Your First Contact</span>
-            </button>
+            <Button 
+              gradientDuoTone="purpleToBlue"
+              className="font-semibold"
+            >
+              <FaPlus className="w-4 h-4 mr-2" />
+              Add Your First Contact
+            </Button>
           </div>
         )}
 
@@ -204,7 +205,7 @@ const Contacts = () => {
               totalPages={Math.ceil(filteredContacts.length / 8)}
               onPageChange={onPageChange}
               showIcons
-              className="pagination-modern"
+              className="mb-8"
             />
           </div>
         )}
