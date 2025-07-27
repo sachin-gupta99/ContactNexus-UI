@@ -45,13 +45,6 @@ const SimpleSignUpForm = () => {
     try {
       e.preventDefault();
 
-      dispatch(
-        toastActions.setToast({
-          message: "Creating your account...",
-          type: "info",
-        })
-      );
-
       const name = nameRef.current?.value;
       const email = emailRef.current?.value;
       const password = passwordRef.current?.value;
@@ -133,6 +126,13 @@ const SimpleSignUpForm = () => {
         );
         return;
       }
+
+      dispatch(
+        toastActions.setToast({
+          message: "Creating your account...",
+          type: "info",
+        })
+      );
 
       const formData = new FormData();
       formData.append("name", name);

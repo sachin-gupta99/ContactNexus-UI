@@ -39,6 +39,16 @@ body {
   border-radius: 10px;
 }
 
+/* Hide scrollbar utility class */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #2563eb, #0891b2);
 }
