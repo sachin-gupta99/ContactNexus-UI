@@ -1,75 +1,94 @@
 import React from "react";
-import { Card } from "flowbite-react";
+import { FaPhone, FaEnvelope, FaStar, FaRegStar, FaShare } from "react-icons/fa";
 
-const ContactCard = ({ name, work, image, number }) => {
+const ContactCard = ({ name, work, image, number, email, isFavorite = false, onToggleFavorite, onShare }) => {
   return (
-    <a
-      href="#"
-      className="block rounded-lg p-4 shadow-lg border-[0.01rem] border-gray-500"
-    >
-      <img alt={`${name}`} src={image} className="h-56 w-full rounded-md object-cover" />
+    <div className="card-modern group overflow-hidden">
+      {/* Header with image and favorite button */}
+      <div className="relative">
+        <div className="h-48 overflow-hidden">
+          <img 
+            alt={`${name}`} 
+            src={image || "https://via.placeholder.com/300x200?text=No+Image"} 
+            className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" 
+          />
+        </div>
+        
+        {/* Favorite and Share buttons */}
+        <div className="absolute top-4 right-4 flex space-x-2">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onToggleFavorite?.();
+            }}
+            className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all duration-200"
+          >
+            {isFavorite ? (
+              <FaStar className="w-4 h-4 text-yellow-500" />
+            ) : (
+              <FaRegStar className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onShare?.();
+            }}
+            className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all duration-200"
+          >
+            <FaShare className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
 
-      <div className="mt-2">
-        <dl>
-          <div>
-            <dt className="sr-only">Name</dt>
-            <dd className="font-medium">{name}</dd>
-          </div>
-          <div>
-            <dt className="sr-only">Work</dt>
-            <dd className="text-sm text-gray-500">{work}</dd>
-          </div>
-        </dl>
+        {/* Status indicator */}
+        <div className="absolute bottom-4 left-4 px-3 py-1 bg-green-500 text-white text-xs rounded-full font-medium">
+          Available
+        </div>
+      </div>
 
-        <div className="mt-6 flex items-center gap-8 text-xs">
-          <div className="sm:inline-flex sm:shrink-0 sm:items-center sm:gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="size-4 text-red-500 "
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"
-              />
-            </svg>
+      {/* Content */}
+      <div className="p-6">
+        <div className="mb-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+            {name}
+          </h3>
+          <p className="text-gray-600 font-medium">{work}</p>
+        </div>
 
-            <div className="mt-1.5 sm:mt-0">
-              <p className="text-gray-500">Phone</p>
-
-              <p className="font-medium">{number}</p>
+        {/* Contact Information */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3 text-sm">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <FaPhone className="w-3 h-3 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs">Phone</p>
+              <p className="font-medium text-gray-900">{number}</p>
             </div>
           </div>
 
-          <div className="sm:inline-flex sm:shrink-0 sm:items-center sm:gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="size-4 text-red-500 "
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
-              />
-            </svg>
-
-            <div className="mt-1.5 sm:mt-0">
-              <p className="text-gray-500">Email</p>
-
-              <p className="font-light">{"sachin.gupta.2j99@gmail.com"}</p>
+          <div className="flex items-center space-x-3 text-sm">
+            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <FaEnvelope className="w-3 h-3 text-green-600" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs">Email</p>
+              <p className="font-medium text-gray-900 truncate">{email || "Not provided"}</p>
             </div>
           </div>
         </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 flex space-x-2">
+          <button className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105">
+            Message
+          </button>
+          <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200">
+            Call
+          </button>
+        </div>
       </div>
-    </a>
+    </div>
   );
 };
 

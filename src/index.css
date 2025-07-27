@@ -1,6 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
   margin: 0;
@@ -8,52 +10,133 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: "Nanum Gothic", sans-serif;
-  background-color: #ffecec;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  color: #1a202c;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
 }
 
 @tailwind components;
 
-.link {
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  transition: all 0.3s ease;
+}
+
+.glass:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+}
+
+/* Modern button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 border border-gray-300;
+}
+
+/* Modern card styles */
+.card-modern {
+  @apply bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100;
+}
+
+/* Animated gradients */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent font-bold;
+}
+
+.animated-bg {
+  background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Pulse animation */
+.pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Modern nav link styles */
+.nav-link {
   position: relative;
   display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 500;
 }
 
-.link::after {
+.nav-link::before {
   content: "";
   position: absolute;
+  bottom: 0;
   left: 50%;
-  bottom: -1.3rem;
-  transform: translateX(-50%);
   width: 0;
-  height: 4px;
-  border-radius: 20rem;
-  background: #c53007;
-  transition: width 0.3s, transform 0.3s;
-  /* background: linear-gradient(90deg, #af472a, #f08e81); */
-  /* background: linear-gradient(90deg, #ffecec, #f08e81); */
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+  border-radius: 1px;
 }
 
-.link:hover::after {
+.nav-link:hover::before,
+.nav-link.active::before {
   width: 100%;
-  transform: translateX(-50%) scaleX(1.2);
 }
 
-.active::after {
-  width: 100%;
-  transform: translateX(-50%) scaleX(1.2);
+.nav-link:hover {
+  color: #93c5fd;
+  transform: translateY(-1px);
 }
 
-.dropdown-items:hover::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 4px;
-  background-color: red;
-  border-radius: 0 2px 2px 0;
+/* Modern dropdown styles */
+.dropdown-modern {
+  @apply bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-white/20 overflow-hidden;
+}
+
+.dropdown-item {
+  @apply px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-blue-500;
 }
 
 .swiper {
@@ -72,43 +155,88 @@ body {
 }
 
 .swiper-slide:nth-child(1n) {
-  background-color: rgb(206, 17, 17);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .swiper-slide:nth-child(2n) {
-  background-color: rgb(0, 140, 255);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 .swiper-slide:nth-child(3n) {
-  background-color: rgb(10, 184, 111);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
 .swiper-slide:nth-child(4n) {
-  background-color: rgb(211, 122, 7);
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
 .swiper-slide:nth-child(5n) {
-  background-color: rgb(118, 163, 12);
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
 }
 
 .swiper-slide:nth-child(6n) {
-  background-color: rgb(180, 10, 47);
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
 }
 
 .swiper-slide:nth-child(7n) {
-  background-color: rgb(35, 99, 19);
+  background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
 }
 
-.swiper-slide:nth-child(8n) {
-  background-color: rgb(0, 68, 255);
+/* Loading animations */
+.loading {
+  animation: spin 1s linear infinite;
 }
 
-.swiper-slide:nth-child(9n) {
-  background-color: rgb(218, 12, 218);
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.swiper-slide:nth-child(10n) {
-  background-color: rgb(54, 94, 77);
+/* Fade in animation */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide in from top */
+.slide-in-from-top {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Modern pagination styles */
+.pagination-modern .fc-pagination-list {
+  @apply flex items-center space-x-1;
+}
+
+.pagination-modern .fc-pagination-list button {
+  @apply px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 focus:z-10 focus:ring-2 focus:ring-blue-500 focus:text-blue-600 transition-all duration-200;
+}
+
+.pagination-modern .fc-pagination-list button[aria-current="page"] {
+  @apply z-10 bg-blue-50 border-blue-500 text-blue-600;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
 @tailwind utilities;

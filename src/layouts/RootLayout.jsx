@@ -14,6 +14,7 @@ const RootLayout = () => {
     }
   }, [path]);
 
+  // Auth pages don't need navbar/footer
   if (
     path === "/auth?mode=signin" ||
     path === "/auth?mode=signup" ||
@@ -24,19 +25,18 @@ const RootLayout = () => {
         <Outlet />
       </div>
     );
-  } else {
-    return (
-      <>
-        <div className="min-h-screen">
-          <Navbar />
-          <Outlet />
-        </div>
-        <div>
-          <FooterLayout />
-        </div>
-      </>
-    );
-  }
+  } 
+
+  // Main app layout
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <FooterLayout />
+    </div>
+  );
 };
 
 export default RootLayout;
