@@ -217,22 +217,22 @@ const SimpleSignUpForm = () => {
     <div className="w-full">
       {/* Header */}
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
           Create your account
         </h2>
-        <p className="text-slate-300 text-md">Join Contact Nexus and start managing your contacts</p>
+        <p className="text-gray-600 text-md">Join Contact Nexus and start managing your contacts</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Details Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-cyan-400 border-b border-slate-600 pb-2">Personal Details</h3>
+          <h3 className="text-lg font-semibold text-blue-600 border-b border-gray-300 pb-2">Personal Details</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="name" value="Full name *" className="text-zinc-200" />
+                <Label htmlFor="name" value="Full name *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={nameRef}
@@ -246,7 +246,7 @@ const SimpleSignUpForm = () => {
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="email" value="Email address *" className="text-zinc-200" />
+                <Label htmlFor="email" value="Email address *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={emailRef}
@@ -262,7 +262,7 @@ const SimpleSignUpForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="password" value="Password *" className="text-zinc-200" />
+                <Label htmlFor="password" value="Password *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={passwordRef}
@@ -276,7 +276,7 @@ const SimpleSignUpForm = () => {
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="confirmPassword" value="Confirm Password *" className="text-zinc-200" />
+                <Label htmlFor="confirmPassword" value="Confirm Password *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={confirmPasswordRef}
@@ -292,28 +292,28 @@ const SimpleSignUpForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="work" value="Work/Profession *" className="text-zinc-200" />
+                <Label htmlFor="work" value="Work/Profession *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={workRef}
                 id="work"
                 type="text"
                 icon={MdWork}
-                placeholder="Student, Software Engineer, etc."
+                placeholder="Software Engineer, Student, Designer..."
                 required
               />
             </div>
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="phone" value="Phone Number *" className="text-zinc-200" />
+                <Label htmlFor="phone" value="Phone Number *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={phoneRef}
                 id="phone"
                 type="tel"
                 icon={FaPhoneAlt}
-                placeholder="1234567890"
+                placeholder="+1 234 567 8900"
                 required
               />
             </div>
@@ -322,11 +322,11 @@ const SimpleSignUpForm = () => {
 
         {/* Address Details Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-cyan-400 border-b border-slate-600 pb-2">Address Details</h3>
+          <h3 className="text-lg font-semibold text-blue-600 border-b border-gray-300 pb-2">Address Details</h3>
           
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="street" value="House/Flat No., Street Name *" className="text-zinc-200" />
+              <Label htmlFor="street" value="House/Flat No., Street Name *" className="text-gray-700 font-medium" />
             </div>
             <TextInput
               ref={streetRef}
@@ -341,7 +341,7 @@ const SimpleSignUpForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="area" value="Area *" className="text-zinc-200" />
+                <Label htmlFor="area" value="Area *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={areaRef}
@@ -355,7 +355,7 @@ const SimpleSignUpForm = () => {
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="city" value="City *" className="text-zinc-200" />
+                <Label htmlFor="city" value="City *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={cityRef}
@@ -371,7 +371,7 @@ const SimpleSignUpForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="state" value="State *" className="text-zinc-200" />
+                <Label htmlFor="state" value="State *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={stateRef}
@@ -385,7 +385,7 @@ const SimpleSignUpForm = () => {
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="pincode" value="Pincode *" className="text-zinc-200" />
+                <Label htmlFor="pincode" value="Pincode *" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={pincodeRef}
@@ -401,45 +401,45 @@ const SimpleSignUpForm = () => {
 
         {/* Social Media & Interests Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-cyan-400 border-b border-slate-600 pb-2">Social Media & Interests</h3>
+          <h3 className="text-lg font-semibold text-blue-600 border-b border-gray-300 pb-2">Social Media & Interests</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="github" value="GitHub Profile" className="text-zinc-200" />
+                <Label htmlFor="github" value="GitHub Profile" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={githubRef}
                 id="github"
                 type="text"
                 icon={FaGithub}
-                placeholder="GitHub username or URL"
+                placeholder="your-username or github.com/username"
               />
             </div>
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="linkedin" value="LinkedIn Profile" className="text-zinc-200" />
+                <Label htmlFor="linkedin" value="LinkedIn Profile" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={linkedinRef}
                 id="linkedin"
                 type="text"
                 icon={FaLinkedin}
-                placeholder="LinkedIn profile URL"
+                placeholder="linkedin.com/in/yourname"
               />
             </div>
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="instagram" value="Instagram Handle" className="text-zinc-200" />
+                <Label htmlFor="instagram" value="Instagram Handle" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={instagramRef}
                 id="instagram"
                 type="text"
                 icon={FaInstagramSquare}
-                placeholder="Instagram username"
+                placeholder="@yourusername"
               />
             </div>
           </div>
@@ -447,40 +447,40 @@ const SimpleSignUpForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="likes" value="Likes/Hobbies" className="text-zinc-200" />
+                <Label htmlFor="likes" value="Likes/Hobbies" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={likesRef}
                 id="likes"
                 type="text"
                 icon={BsPersonBadgeFill}
-                placeholder="What do you like?"
+                placeholder="Reading, traveling, photography..."
               />
             </div>
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="movie" value="Favorite Movies" className="text-zinc-200" />
+                <Label htmlFor="movie" value="Favorite Movies" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={movieRef}
                 id="movie"
                 type="text"
                 icon={MdMovie}
-                placeholder="Favorite movies"
+                placeholder="The Matrix, Inception, Avengers..."
               />
             </div>
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="interests" value="Interests" className="text-zinc-200" />
+                <Label htmlFor="interests" value="Interests" className="text-gray-700 font-medium" />
               </div>
               <TextInput
                 ref={interestsRef}
                 id="interests"
                 type="text"
                 icon={MdInterests}
-                placeholder="Your interests"
+                placeholder="Technology, sports, music..."
               />
             </div>
           </div>
@@ -488,7 +488,7 @@ const SimpleSignUpForm = () => {
 
         {/* Profile & Bio Section */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-cyan-400 border-b border-slate-600 pb-2">Profile & Bio</h3>
+          <h3 className="text-lg font-semibold text-blue-600 border-b border-gray-300 pb-2">Profile & Bio</h3>
           
           <div>
             <ImagePicker
@@ -500,25 +500,25 @@ const SimpleSignUpForm = () => {
 
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="bioHeading" value="Bio Heading" className="text-zinc-200" />
+              <Label htmlFor="bioHeading" value="Bio Heading" className="text-gray-700 font-medium" />
             </div>
             <TextInput
               ref={bioHeadingRef}
               id="bioHeading"
               type="text"
               icon={BsPersonBadgeFill}
-              placeholder="A catchy bio heading"
+              placeholder="Software Engineer | Creative Thinker"
             />
           </div>
 
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="bioDesc" value="Bio Description" className="text-zinc-200" />
+              <Label htmlFor="bioDesc" value="Bio Description" className="text-gray-700 font-medium" />
             </div>
             <Textarea
               ref={bioDescRef}
               id="bioDesc"
-              placeholder="Tell us about yourself..."
+              placeholder="Share a brief description about yourself, your background, or what makes you unique..."
               rows={4}
               className="resize-none"
             />
@@ -527,13 +527,13 @@ const SimpleSignUpForm = () => {
 
         <div className="flex items-center gap-2">
           <Checkbox id="terms" required />
-          <Label htmlFor="terms" className="text-sm text-zinc-200" >
+          <Label htmlFor="terms" className="text-sm text-gray-600" >
             I agree to the{" "}
-            <a href="#" className="text-cyan-600 hover:underline dark:text-cyan-500">
+            <a href="#" className="text-blue-600 hover:underline">
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="#" className="text-cyan-600 hover:underline dark:text-cyan-500">
+            <a href="#" className="text-blue-600 hover:underline">
               Privacy Policy
             </a>
           </Label>
@@ -541,7 +541,7 @@ const SimpleSignUpForm = () => {
 
         <Button 
           type="submit" 
-          gradientDuoTone="cyanToBlue" 
+          gradientDuoTone="purpleToBlue" 
           className="w-full font-semibold"
           size="lg"
         >

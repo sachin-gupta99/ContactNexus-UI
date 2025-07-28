@@ -23,11 +23,11 @@ const ImagePicker = forwardRef(({ label, name }, ref) => {
 
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium text-zinc-200 mb-2">
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
         {label}
       </label>
       <div className="flex items-center gap-6 mb-4">
-        <div className="w-32 h-32 border-2 border-slate-600 rounded-lg flex justify-center items-center text-center bg-slate-800/50 relative overflow-hidden">
+        <div className="w-32 h-32 border-2 border-gray-300 rounded-lg flex justify-center items-center text-center bg-gray-50 relative overflow-hidden">
           {image && (
             <img
               src={image}
@@ -36,7 +36,7 @@ const ImagePicker = forwardRef(({ label, name }, ref) => {
             />
           )}
           {!image && (
-            <p className="text-slate-400 text-sm p-4">
+            <p className="text-gray-400 text-sm p-4">
               No image selected
             </p>
           )}
@@ -52,7 +52,7 @@ const ImagePicker = forwardRef(({ label, name }, ref) => {
         />
         <button
           type="button"
-          className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-50 shadow-lg"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 shadow-lg"
           onClick={handlePickClick}
         >
           Choose Image

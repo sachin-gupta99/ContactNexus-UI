@@ -65,17 +65,17 @@ const SignInForm = () => {
     <div className="w-full">
       {/* Header */}
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
           Welcome back
         </h2>
-        <p className="text-slate-300">Sign in to your account to continue</p>
+        <p className="text-gray-600">Sign in to your account to continue</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <div className="mb-2 block">
-            <Label htmlFor="email" value="Email address" className="text-zinc-200" />
+            <Label htmlFor="email" value="Email address" className="text-gray-700 font-medium" />
           </div>
           <TextInput
             ref={emailRef}
@@ -89,7 +89,7 @@ const SignInForm = () => {
 
         <div>
           <div className="mb-2 block">
-            <Label htmlFor="password" value="Password" className="text-zinc-200" />
+            <Label htmlFor="password" value="Password" className="text-gray-700 font-medium" />
           </div>
           <TextInput
             ref={passwordRef}
@@ -104,18 +104,18 @@ const SignInForm = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Checkbox id="remember" />
-            <Label htmlFor="remember" className="text-sm text-slate-300">
+            <Label htmlFor="remember" className="text-sm text-gray-600">
               Remember me
             </Label>
           </div>
-          <a href="#" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
+          <a href="#" className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200">
             Forgot your password?
           </a>
         </div>
 
         <Button 
           type="submit" 
-          gradientDuoTone="cyanToBlue" 
+          gradientDuoTone="purpleToBlue" 
           className="w-full font-semibold"
           size="lg"
         >

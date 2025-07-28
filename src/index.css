@@ -339,3 +339,23 @@ body {
 .w-max-content {
   width: max-content;
 }
+
+/* Light theme placeholder styling */
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af !important; /* gray-400 */
+  opacity: 0.7;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  color: #d1d5db !important; /* gray-300 */
+  opacity: 0.5;
+}
+
+/* Ensure placeholders are lighter in dark mode contexts */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+  opacity: 0.8;
+}
