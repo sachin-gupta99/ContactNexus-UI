@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Link } from "react-router-dom";
 import { HiMail, HiUser } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { FaPhoneAlt, FaStreetView, FaCity, FaGithub, FaLinkedin, FaInstagramSquare } from "react-icons/fa";
@@ -9,7 +8,7 @@ import { TbMapPinCode } from "react-icons/tb";
 import { MdMovie, MdInterests, MdWork } from "react-icons/md";
 import { BsPersonBadgeFill } from "react-icons/bs";
 import { TbFileDescription } from "react-icons/tb";
-import { Button, Label, TextInput, Checkbox, Textarea, FileInput } from "flowbite-react";
+import { Button, Label, TextInput, Checkbox, Textarea } from "flowbite-react";
 import ImagePicker from "./ImagePicker";
 import { registerRoute, signUpRoute } from "../api/authApi";
 import { setAuthToken } from "../util/helper";
@@ -64,7 +63,7 @@ const SimpleSignUpForm = () => {
       const interests = interestsRef.current?.value;
       const image = imageRef.current?.files[0];
       const bioHeading = bioHeadingRef.current?.value;
-      const bioDesc = bioDescRef.current?.value;
+      const bioDescription = bioDescRef.current?.value;
 
       // Validation
       if (!name || !email || !password || !confirmPassword || !work || !phone) {
@@ -151,8 +150,9 @@ const SimpleSignUpForm = () => {
       formData.append("likes", likes);
       formData.append("movie", movie);
       formData.append("interests", interests);
-      formData.append("bio_heading", bioHeading);
-      formData.append("bio_desc", bioDesc);
+      formData.append("image", "image");
+      formData.append("bioHeading", bioHeading);
+      formData.append("bioDescription", bioDescription);
       if (image) {
         formData.append("imageFile", image);
       }
