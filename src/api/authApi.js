@@ -1,26 +1,17 @@
 import axiosInstance from "./axiosInstance";
 
-export const registerRoute = (user) => {
-  return axiosInstance.post("/api/auth/register", user);
+export const signUpRoute = (payload) => {
+  return axiosInstance.post("/api/v1/auth/signup", payload);
 };
 
-export const loginRoute = (user) => {
-  return axiosInstance.post("/api/auth/login", user);
+export const loginRoute = (credentials) => {
+  return axiosInstance.post("/api/v1/auth/login", credentials);
 };
 
-export const signUpRoute = (data) => {
-
-  return axiosInstance.post(`/api/auth/addUser`, data, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+// Reaching this at all proves the token is valid, and it returns the current
+// user so the app can rehydrate redux after a page refresh.
+export const getMeRoute = () => {
+  return axiosInstance.get("/api/v1/auth/me");
 };
 
-export const verifyTokenRoute = () => {
-  return axiosInstance.post("/api/user/verifyToken");
-};
-
-export const logoutRoute = (userId) => {
-  return axiosInstance.get(`/api/auth/logout/${userId}`);
-};
+// Logout is client-side: the token is stateless, so discarding it is enough.

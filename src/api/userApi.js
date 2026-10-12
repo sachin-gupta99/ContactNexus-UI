@@ -1,5 +1,8 @@
 import axiosInstance from "./axiosInstance";
 
-export const getUserByEmailRoute = ({email}) => {
-  return axiosInstance.get(`/api/user/${email}`);
+// Content-Type is intentionally left unset so axios adds the multipart boundary.
+export const uploadAvatarRoute = (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return axiosInstance.put("/api/v1/users/me/avatar", formData);
 };

@@ -8,8 +8,7 @@ import { Avatar } from "flowbite-react";
 import { getAuthToken, removeAuthToken } from "../util/helper";
 import { router } from "../App";
 import { useSelector } from "react-redux";
-import { jwtDecode } from "jwt-decode";
-import { getUserByEmailRoute } from "../api/userApi";
+import { getMeRoute } from "../api/authApi";
 import { useDispatch } from "react-redux";
 import { userActions } from "../store/user";
 
@@ -23,18 +22,23 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
   };
 
   useEffect(() => {
+    // /me resolves the user from the token server-side, so there is no need to
+    // decode the JWT here or look anyone up by email.
     const getUser = async () => {
-      const token = getAuthToken();
-      const decodedToken = jwtDecode(token);
+      if (!getAuthToken() || user) {
+        return;
+      }
 
-      const response = await getUserByEmailRoute({ email: decodedToken.sub });
-
-      if (response.data)
-        dispatch(userActions.setUser(response.data?.data));
+      try {
+        const response = await getMeRoute();
+        dispatch(userActions.setUser(response.data));
+      } catch (error) {
+        // The axios 401 interceptor handles an expired session.
+      }
     };
 
     getUser();
-  }, []);
+  }, [user, dispatch]);
 
   return (
     <div className="relative z-50">

@@ -10,7 +10,8 @@ import { BsPersonBadgeFill } from "react-icons/bs";
 import { TbFileDescription } from "react-icons/tb";
 import { Button, Label, TextInput, Checkbox, Textarea } from "flowbite-react";
 import ImagePicker from "./ImagePicker";
-import { registerRoute, signUpRoute } from "../api/authApi";
+import { signUpRoute } from "../api/authApi";
+import { uploadAvatarRoute } from "../api/userApi";
 import { setAuthToken } from "../util/helper";
 import { router } from "../App";
 import { useDispatch } from "react-redux";
@@ -133,42 +134,52 @@ const SimpleSignUpForm = () => {
         })
       );
 
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("email", email);
-      formData.append("password", password);
-      formData.append("work", work);
-      formData.append("phone", phone);
-      formData.append("street", street);
-      formData.append("area", area);
-      formData.append("city", city);
-      formData.append("state", state);
-      formData.append("pincode", pincode);
-      formData.append("github", github);
-      formData.append("linkedin", linkedin);
-      formData.append("instagram", instagram);
-      formData.append("likes", likes);
-      formData.append("movie", movie);
-      formData.append("interests", interests);
-      formData.append("image", "image");
-      formData.append("bioHeading", bioHeading);
-      formData.append("bioDescription", bioDescription);
-      if (image) {
-        formData.append("imageFile", image);
-      }
+      const response = await signUpRoute({
+        name,
+        email,
+        password,
+        profile: {
+          work,
+          phone,
+          street,
+          area,
+          city,
+          state,
+          pincode,
+          github,
+          linkedin,
+          instagram,
+          likes,
+          movie,
+          interests,
+          bioHeading,
+          bioDescription,
+        },
+      });
 
-      const response = await signUpRoute(formData);
+      if (response?.data?.token) {
+        setAuthToken(response.data.token);
 
-      if (response?.data?.data?.token) {
-        setAuthToken(response?.data?.data?.token);
+        // Signup is JSON, so the avatar goes up separately once we hold a token.
+        // A failed upload must not invalidate an otherwise successful signup.
+        let user = response.data.user;
+        let message = "Account created successfully";
+
+        if (image) {
+          try {
+            const avatar = await uploadAvatarRoute(image);
+            user = {
+              ...user,
+              profile: { ...user.profile, imageUrl: avatar.data.imageUrl },
+            };
+          } catch {
+            message = "Account created, but the profile image could not be uploaded";
+          }
+        }
+
         router.navigate("/home");
-        dispatch(
-          toastActions.setToast({
-            message: "Account created successfully",
-            type: "success",
-          })
-        );
-        dispatch(userActions.setUser(response?.data?.data));
+        dispatch(toastActions.setToast({ message, type: "success" }));
+        dispatch(userActions.setUser(user));
       } else {
         dispatch(
           toastActions.setToast({
@@ -182,34 +193,18 @@ const SimpleSignUpForm = () => {
         confirmPasswordRef.current.value = "";
       }
     } catch (error) {
+      // Surface the server's reason (e.g. "An account with email ... already
+      // exists") so the user knows what to change. Only the passwords are
+      // cleared - wiping all 19 fields over a taken email is unusable.
       dispatch(
         toastActions.setToast({
-          message: "Failed to create account",
+          message: error.response?.data?.message || "Failed to create account",
           type: "error",
         })
       );
-      
-      // Clear all form fields on error
-      nameRef.current.value = "";
-      emailRef.current.value = "";
+
       passwordRef.current.value = "";
       confirmPasswordRef.current.value = "";
-      workRef.current.value = "";
-      phoneRef.current.value = "";
-      streetRef.current.value = "";
-      areaRef.current.value = "";
-      cityRef.current.value = "";
-      stateRef.current.value = "";
-      pincodeRef.current.value = "";
-      githubRef.current.value = "";
-      linkedinRef.current.value = "";
-      instagramRef.current.value = "";
-      likesRef.current.value = "";
-      movieRef.current.value = "";
-      interestsRef.current.value = "";
-      bioHeadingRef.current.value = "";
-      bioDescRef.current.value = "";
-      if (imageRef.current) imageRef.current.value = "";
     }
   };
 

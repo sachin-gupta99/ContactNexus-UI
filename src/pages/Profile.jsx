@@ -31,33 +31,31 @@ const Profile = () => {
     document.title = "Profile - Contact Nexus";
   }, []);
 
+  // Display fields live on the nested profile; only id/email/name are top-level.
+  const profile = user?.profile;
+
   const likesInterests = [
-    { label: "Likes", value: user?.likes, icon: FaHeart },
-    { label: "Movie", value: user?.movie, icon: FaFilm },
-    { label: "Interests", value: user?.interests, icon: FaGamepad },
+    { label: "Likes", value: profile?.likes, icon: FaHeart },
+    { label: "Movie", value: profile?.movie, icon: FaFilm },
+    { label: "Interests", value: profile?.interests, icon: FaGamepad },
   ];
 
   const contactInformation = [
     { label: "Email", value: user?.email, icon: FaEnvelope },
-    { label: "Phone", value: "+91-" + user?.phone, icon: FaPhone },
+    { label: "Phone", value: profile?.phone ? "+91-" + profile.phone : null, icon: FaPhone },
     {
       label: "Address",
-      value:
-        user?.street +
-        ", " +
-        user?.area +
-        ", " +
-        user?.city +
-        ", " +
-        user?.state,
+      value: [profile?.street, profile?.area, profile?.city, profile?.state]
+        .filter(Boolean)
+        .join(", "),
       icon: FaMapMarkerAlt,
     },
   ];
 
   const socialMedia = [
-    { label: "Github", value: user?.github, icon: FaGithub },
-    { label: "LinkedIn", value: user?.linkedin, icon: FaLinkedin },
-    { label: "Instagram", value: user?.instagram, icon: FaInstagram },
+    { label: "Github", value: profile?.github, icon: FaGithub },
+    { label: "LinkedIn", value: profile?.linkedin, icon: FaLinkedin },
+    { label: "Instagram", value: profile?.instagram, icon: FaInstagram },
   ];
 
   useEffect(() => {
@@ -91,7 +89,7 @@ const Profile = () => {
                   <div className="flex-shrink-0 text-center lg:text-left">
                     <div className="relative inline-block">
                       <Avatar
-                        img={user?.image || ProfilePicture}
+                        img={profile?.imageUrl || ProfilePicture}
                         size="xl"
                         className="ring-4 ring-blue-200 shadow-lg"
                       />
@@ -105,7 +103,7 @@ const Profile = () => {
                         {user?.name || "User Name"}
                       </h1>
                       <p className="text-blue-600 font-semibold text-lg">
-                        {user?.work || "Your Profession"}
+                        {profile?.work || "Your Profession"}
                       </p>
                     </div>
                   </div>
@@ -117,16 +115,16 @@ const Profile = () => {
                         {user?.name || "User Name"}
                       </h1>
                       <p className="text-blue-600 font-semibold text-xl mb-4">
-                        {user?.work || "Your Profession"}
+                        {profile?.work || "Your Profession"}
                       </p>
 
                       {/* Bio Section */}
                       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border border-blue-100">
                         <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
-                          {user?.bioHeading || "Bio Heading"}
+                          {profile?.bioHeading || "Bio Heading"}
                         </h3>
                         <p className="text-gray-700 leading-relaxed">
-                          {user?.bioDescription ||
+                          {profile?.bioDescription ||
                             "Tell us about yourself and what makes you unique. Share your passion, goals, and what you love to do."}
                         </p>
                       </div>

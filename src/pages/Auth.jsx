@@ -1,30 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import SignInForm from "../components/SignInForm";
 import SimpleSignUpForm from "../components/SimpleSignUpForm";
 import { router } from "../App";
-import { getBackgroundRoute } from "../api/generalApi";
 
 const Auth = () => {
   const [params] = useSearchParams();
   const mode = params.get("mode");
-  const [background, setBackground] = useState("");
 
   useEffect(() => {
     document.title = "Authentication - Contact Nexus";
-  }, []);
-
-  useEffect(() => {
-    const func = async () => {
-      try {
-        const background = await getBackgroundRoute();
-        setBackground(background.data.urls.full);
-      } catch (error) {
-        console.error("Failed to load background");
-      }
-    };
-
-    func();
   }, []);
 
   useEffect(() => {

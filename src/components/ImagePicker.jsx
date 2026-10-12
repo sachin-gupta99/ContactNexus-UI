@@ -1,10 +1,26 @@
 import React, { forwardRef } from "react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { toastActions } from "../store/toast";
+
+// Keep in sync with spring.servlet.multipart.max-file-size in the service.
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
 
 const ImagePicker = forwardRef(({ label, name }, ref) => {
   const [image, setImage] = useState(null);
-  const handlePickClick = (event) => {
+  const dispatch = useDispatch();
+
+  const handlePickClick = () => {
     ref.current?.click();
+  };
+
+  // Clearing the input matters: the form reads imageRef.current.files[0] on
+  // submit, so a rejected file would otherwise still be uploaded.
+  const reject = (message) => {
+    dispatch(toastActions.setToast({ message, type: "error" }));
+    if (ref.current) ref.current.value = "";
+    setImage(null);
   };
 
   const handleImageChange = (event) => {
@@ -14,6 +30,17 @@ const ImagePicker = forwardRef(({ label, name }, ref) => {
       setImage(null);
       return;
     }
+
+    // `accept` is only a hint to the file picker, so re-check type and size here.
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      return reject("Please choose a PNG, JPEG or GIF image");
+    }
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
+      return reject(`Image is ${sizeInMb}MB — please choose one under 5MB`);
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setImage(reader.result);

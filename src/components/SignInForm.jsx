@@ -28,14 +28,10 @@ const SignInForm = () => {
       const email = emailRef.current.value;
       const password = passwordRef.current.value;
 
-      const formData = new FormData();
-      formData.append("email", email);
-      formData.append("password", password);
+      const response = await loginRoute({ email, password });
 
-      const response = await loginRoute(formData);
-    
-      if (response?.data?.data?.token) {
-        setAuthToken(response?.data?.data?.token);
+      if (response?.data?.token) {
+        setAuthToken(response.data.token);
         router.navigate("/home");
         dispatch(
           toastActions.setToast({
@@ -43,7 +39,7 @@ const SignInForm = () => {
             type: "success",
           })
         );
-        dispatch(userActions.setUser(response?.data?.data));
+        dispatch(userActions.setUser(response.data.user));
       } else {
         dispatch(
           toastActions.setToast({
@@ -51,8 +47,6 @@ const SignInForm = () => {
             type: "error",
           })
         );
-        emailRef.current.value = "";
-        passwordRef.current.value = "";
       }
     } catch (error) {
       dispatch(
