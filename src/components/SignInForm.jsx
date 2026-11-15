@@ -3,7 +3,7 @@ import { HiMail } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { Button, Label, TextInput, Checkbox } from "flowbite-react";
 import { loginRoute } from "../api/authApi";
-import { setAuthToken } from "../util/helper";
+import { setAccessToken } from "../util/tokenStore";
 import { router } from "../App";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
@@ -30,8 +30,10 @@ const SignInForm = () => {
 
       const response = await loginRoute({ email, password });
 
-      if (response?.data?.token) {
-        setAuthToken(response.data.token);
+      if (response?.data?.accessToken) {
+        setAccessToken(response.data.accessToken, response.data.expiresInSeconds);
+        dispatch(userActions.setUser(response.data.user));
+        dispatch(userActions.setAuthReady(true));
         router.navigate("/home");
         dispatch(
           toastActions.setToast({
@@ -39,7 +41,6 @@ const SignInForm = () => {
             type: "success",
           })
         );
-        dispatch(userActions.setUser(response.data.user));
       } else {
         dispatch(
           toastActions.setToast({

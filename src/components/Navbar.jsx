@@ -7,21 +7,16 @@ import { IoHome, IoMenu, IoClose } from "react-icons/io5";
 import { IoMdContacts } from "react-icons/io";
 import Dropdown from "./Dropdown";
 import { Button, Navbar as FlowbiteNavbar } from "flowbite-react";
-import { getAuthToken } from "../util/helper";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
   const dropdownRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useSelector((state) => Boolean(state.user?.user));
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
-
-  useEffect(() => {
-    const token = getAuthToken();
-    if (token) setIsAuthenticated(true);
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

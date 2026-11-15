@@ -1,57 +1,42 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { IoPerson } from "react-icons/io5";
 import { IoMdSettings } from "react-icons/io";
 import { IoLogOut } from "react-icons/io5";
 import { FaAddressCard } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { Avatar } from "flowbite-react";
-import { getAuthToken, removeAuthToken } from "../util/helper";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutRoute } from "../api/authApi";
+import { clearAccessToken } from "../util/tokenStore";
 import { router } from "../App";
-import { useSelector } from "react-redux";
-import { getMeRoute } from "../api/authApi";
-import { useDispatch } from "react-redux";
 import { userActions } from "../store/user";
 
 const Dropdown = ({ isOpen, toggleDropdown }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user?.user);
 
-  const onLogout = () => {
-    removeAuthToken();
-    router.navigate("/auth");
+  const onLogout = async () => {
+    try {
+      await logoutRoute();
+    } catch {
+      // Best-effort: even if the server call fails we still clear local state.
+    }
+    clearAccessToken();
+    dispatch(userActions.clearUser());
+    router.navigate("/auth?mode=signin");
   };
-
-  useEffect(() => {
-    // /me resolves the user from the token server-side, so there is no need to
-    // decode the JWT here or look anyone up by email.
-    const getUser = async () => {
-      if (!getAuthToken() || user) {
-        return;
-      }
-
-      try {
-        const response = await getMeRoute();
-        dispatch(userActions.setUser(response.data));
-      } catch (error) {
-        // The axios 401 interceptor handles an expired session.
-      }
-    };
-
-    getUser();
-  }, [user, dispatch]);
 
   return (
     <div className="relative z-50">
       {/* Avatar with modern styling */}
       <div className="relative">
-        <div 
+        <div
           className="w-10 h-10 rounded-full overflow-hidden cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all duration-300 transform hover:scale-105"
           onClick={toggleDropdown}
         >
           {user?.image ? (
-            <img 
-              src={user.image} 
-              alt="User Avatar" 
+            <img
+              src={user.image}
+              alt="User Avatar"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -60,7 +45,7 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
             </div>
           )}
         </div>
-        
+
         {/* Online status indicator */}
         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
       </div>
@@ -73,9 +58,9 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 rounded-full overflow-hidden">
                 {user?.image ? (
-                  <img 
-                    src={user.image} 
-                    alt="User Avatar" 
+                  <img
+                    src={user.image}
+                    alt="User Avatar"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -101,20 +86,20 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
               <IoPerson className="w-4 h-4 text-blue-500" />
               <span>Profile</span>
             </Link>
-            
+
             <div className="dropdown-item flex items-center space-x-3">
               <FaAddressCard className="w-4 h-4 text-green-500" />
               <span>Contact Card</span>
             </div>
-            
+
             <Link to="/settings" className="dropdown-item flex items-center space-x-3">
               <IoMdSettings className="w-4 h-4 text-gray-500" />
               <span>Settings</span>
             </Link>
-            
+
             <div className="border-t border-gray-100 my-1"></div>
-            
-            <div 
+
+            <div
               className="dropdown-item flex items-center space-x-3 text-red-600 hover:bg-red-50 hover:border-red-500"
               onClick={onLogout}
             >
