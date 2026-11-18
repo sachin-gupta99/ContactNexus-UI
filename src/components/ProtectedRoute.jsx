@@ -1,36 +1,19 @@
 import React, { useEffect } from "react";
-import { useState } from "react";
-import { getAuthToken, removeAuthToken } from "../util/helper";
+import { useSelector } from "react-redux";
 import { router } from "../App";
-import { verifyTokenRoute } from "../api/authApi";
 
 const ProtectedRoute = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const token = getAuthToken();
+  const { user, authReady } = useSelector((state) => state.user);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      try {
-        if (!token) {
-          setLoading(false);
-          return router.navigate("/auth");
-        } else {
-          const response = await verifyTokenRoute();
-          if (!response.data) {
-            removeAuthToken();
-            return router.navigate("/auth");
-          } else setLoading(false);
-        }
-      } catch (error) {
-        setLoading(false);
-        removeAuthToken();
-        router.navigate("/auth");
-      }
-    };
-    verifyToken();
-  }, [token]);
+    if (authReady && !user) {
+      router.navigate("/auth?mode=signin");
+    }
+  }, [authReady, user]);
 
-  return loading ? <div>Loading...</div> : children;
+  if (!authReady) return null;
+  if (!user) return null;
+  return children;
 };
 
 export default ProtectedRoute;

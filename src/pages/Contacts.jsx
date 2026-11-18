@@ -1,60 +1,77 @@
 import React, { useEffect, useState } from "react";
 import ContactCard from "../components/ContactCard";
 import contact from "../assets/contact.jpg";
-import { Pagination, TextInput, Button, Badge } from "flowbite-react";
+import { Pagination, TextInput, Button, Badge, Spinner } from "flowbite-react";
 import { FaSearch, FaPlus, FaFilter, FaUserFriends } from "react-icons/fa";
 
 const Contacts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all"); // all, favorites, recent
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: "Sachin Gupta",
-      work: "Software Engineer",
-      number: "1234567890",
-      email: "sachin.gupta@example.com",
-      image: contact,
-      isFavorite: true
-    },
-    {
-      id: 2,
-      name: "John Doe",
-      work: "Product Manager",
-      number: "0987654321",
-      email: "john.doe@example.com",
-      image: contact,
-      isFavorite: false
-    },
-    {
-      id: 3,
-      name: "Jane Smith",
-      work: "UI/UX Designer",
-      number: "5555555555",
-      email: "jane.smith@example.com",
-      image: contact,
-      isFavorite: true
-    },
-    {
-      id: 4,
-      name: "Mike Johnson",
-      work: "DevOps Engineer",
-      number: "4444444444",
-      email: "mike.johnson@example.com",
-      image: contact,
-      isFavorite: false
-    },
-    {
-      id: 5,
-      name: "Sarah Wilson",
-      work: "Data Scientist",
-      number: "3333333333",
-      email: "sarah.wilson@example.com",
-      image: contact,
-      isFavorite: false
-    }
-  ]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [contacts, setContacts] = useState([]);
+
+  // Simulate loading contacts data
+  useEffect(() => {
+    const loadContacts = async () => {
+      setIsLoading(true);
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setContacts([
+        {
+          id: 1,
+          name: "Sachin Gupta",
+          work: "Software Engineer",
+          number: "1234567890",
+          email: "sachin.gupta@example.com",
+          image: contact,
+          isFavorite: true
+        },
+        {
+          id: 2,
+          name: "John Doe",
+          work: "Product Manager",
+          number: "0987654321",
+          email: "john.doe@example.com",
+          image: contact,
+          isFavorite: false
+        },
+        {
+          id: 3,
+          name: "Jane Smith",
+          work: "UI/UX Designer",
+          number: "5555555555",
+          email: "jane.smith@example.com",
+          image: contact,
+          isFavorite: true
+        },
+        {
+          id: 4,
+          name: "Mike Johnson",
+          work: "DevOps Engineer",
+          number: "4444444444",
+          email: "mike.johnson@example.com",
+          image: contact,
+          isFavorite: false
+        },
+        {
+          id: 5,
+          name: "Sarah Wilson",
+          work: "Data Scientist",
+          number: "3333333333",
+          email: "sarah.wilson@example.com",
+          image: contact,
+          isFavorite: false
+        }
+      ]);
+      
+      setIsLoading(false);
+    };
+
+    loadContacts();
+  }, []);
 
   const onPageChange = (page) => setCurrentPage(page);
 
@@ -159,7 +176,12 @@ const Contacts = () => {
         </div>
 
         {/* Contacts Grid */}
-        {filteredContacts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Spinner size="xl" className="mb-4" />
+            <p className="text-gray-600 font-medium">Loading your contacts...</p>
+          </div>
+        ) : filteredContacts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
             {filteredContacts.map((contact) => (
               <ContactCard
