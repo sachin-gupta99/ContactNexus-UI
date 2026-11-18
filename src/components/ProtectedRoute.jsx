@@ -1,34 +1,18 @@
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { getAuthToken, removeAuthToken } from "../util/helper";
+import { useSelector } from "react-redux";
 import { router } from "../App";
-import { getMeRoute } from "../api/authApi";
-import { userActions } from "../store/user";
 
 const ProtectedRoute = ({ children }) => {
-  const token = getAuthToken();
-  const dispatch = useDispatch();
+  const { user, authReady } = useSelector((state) => state.user);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      if (!token) {
-        return router.navigate("/auth?mode=signin");
-      }
+    if (authReady && !user) {
+      router.navigate("/auth?mode=signin");
+    }
+  }, [authReady, user]);
 
-      try {
-        // Doubles as session verification and rehydration: redux is not
-        // persisted, so without this a refresh leaves pages with no user.
-        const response = await getMeRoute();
-        dispatch(userActions.setUser(response.data));
-      } catch (error) {
-        removeAuthToken();
-        router.navigate("/auth?mode=signin");
-      }
-    };
-
-    verifyToken();
-  }, [token, dispatch]);
-
+  if (!authReady) return null;
+  if (!user) return null;
   return children;
 };
 

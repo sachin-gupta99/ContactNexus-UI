@@ -12,7 +12,7 @@ import { Button, Label, TextInput, Checkbox, Textarea } from "flowbite-react";
 import ImagePicker from "./ImagePicker";
 import { signUpRoute } from "../api/authApi";
 import { uploadAvatarRoute } from "../api/userApi";
-import { setAuthToken } from "../util/helper";
+import { setAccessToken } from "../util/tokenStore";
 import { router } from "../App";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
@@ -157,8 +157,8 @@ const SimpleSignUpForm = () => {
         },
       });
 
-      if (response?.data?.token) {
-        setAuthToken(response.data.token);
+      if (response?.data?.accessToken) {
+        setAccessToken(response.data.accessToken, response.data.expiresInSeconds);
 
         // Signup is JSON, so the avatar goes up separately once we hold a token.
         // A failed upload must not invalidate an otherwise successful signup.
@@ -177,9 +177,10 @@ const SimpleSignUpForm = () => {
           }
         }
 
+        dispatch(userActions.setUser(user));
+        dispatch(userActions.setAuthReady(true));
         router.navigate("/home");
         dispatch(toastActions.setToast({ message, type: "success" }));
-        dispatch(userActions.setUser(user));
       } else {
         dispatch(
           toastActions.setToast({
