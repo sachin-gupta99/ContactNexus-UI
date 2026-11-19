@@ -1,8 +1,8 @@
-# 📇 ContactNexus UI
+# ContactNexus UI
 
 <div align="center">
-  <img src="https://img.shields.io/badge/React-18.2.0-61dafb?style=for-the-badge&logo=react" alt="React" />
-  <img src="https://img.shields.io/badge/Vite-Latest-646cff?style=for-the-badge&logo=vite" alt="Vite" />
+  <img src="https://img.shields.io/badge/React-18.2-61dafb?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-5.2-646cff?style=for-the-badge&logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-06b6d4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Redux-Toolkit-764abc?style=for-the-badge&logo=redux" alt="Redux Toolkit" />
 </div>
@@ -10,233 +10,98 @@
 <br />
 
 <div align="center">
-  <h3>🚀 A Modern Contact Management Application</h3>
-  <p>Built with React, featuring an elegant dark theme and comprehensive contact management capabilities</p>
+  <h3>Modern contact manager — live demo at <a href="https://contactnexus.vercel.app">contactnexus.vercel.app</a></h3>
+  <p>React + Vite frontend for ContactNexus. Pairs with <a href="https://github.com/sachin-gupta99/ContactNexus-Service">ContactNexus-Service</a> on Render + Neon.</p>
 </div>
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎨 **Modern UI/UX Design**
-- **Elegant Dark Theme** with cyan-blue gradient accents
-- **Glassmorphism Effects** with backdrop blur and transparency
-- **Responsive Design** optimized for all screen sizes
-- **Smooth Animations** and interactive hover effects
-- **Professional Typography** using Orbitron font for brand headings
+- **Dark theme** with cyan→blue gradients and glassmorphism accents.
+- **Signup / login** with full profile capture (work, address, socials, bio, avatar).
+- **Contact CRUD** — list, search, paginate, view, edit, delete.
+- **Avatar upload** with live preview.
+- **Secure session flow** — short-lived access JWT + HttpOnly refresh cookie, transparent refresh on 401.
 
-### 🔐 **Authentication System**
-- **Secure Sign In/Sign Up** with comprehensive form validation
-- **Complete User Registration** with profile customization
-- **Image Upload** with real-time preview functionality
-- **Password Security** with confirmation and strength validation
-- **Terms & Conditions** integration
+## Auth model (quick tour)
 
-### 👥 **Contact Management**
-- **Advanced Contact Cards** with detailed profile information
-- **Search & Filter** functionality for easy contact discovery
-- **CRUD Operations** (Create, Read, Update, Delete contacts)
-- **Profile Image Management** with upload and preview
-- **Pagination** for efficient large contact list handling
+The UI never writes to `localStorage` for auth state. Instead:
 
-### 🌐 **Social & Professional Integration**
-- **Social Media Links** (GitHub, LinkedIn, Instagram)
-- **Professional Profiles** with work and bio information
-- **Complete Address Management** with location details
-- **Interest & Hobby Tracking** for better networking
-- **Bio Sections** with heading and description
+- The **access token** lives only in memory (`src/util/tokenStore.js`). It expires in 15 minutes.
+- The **refresh token** lives in an HttpOnly cookie set by the server. JavaScript can't read it.
+- When any API call returns `401`, the axios response interceptor (`src/api/axiosInstance.js`) silently hits `/api/v1/auth/refresh`, gets a new access token, and retries the original request. A single-flight guard coalesces parallel 401s so only one `/refresh` ever fires at a time.
+- On page reload, `RootLayout` calls `/refresh` once at boot to swap the refresh cookie for a fresh access token and rehydrate the current user.
 
-## 🚀 Quick Start
+See [ContactNexus-Service's refresh-token design](https://github.com/sachin-gupta99/ContactNexus-Service#authentication) for the server side.
 
-### Prerequisites
-Make sure you have the following installed:
-- **Node.js** (v14 or higher)
-- **npm** or **yarn**
-- **Git**
-
-### Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/sachin-gupta99/ContactNexus-UI.git
-   cd ContactNexus-UI
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-4. **Open your browser**
-   Navigate to `http://localhost:3000` to see the application
-
-### Available Scripts
+## Quick start
 
 ```bash
-npm start      # Start development server
-npm run build  # Build for production
-npm run lint   # Run ESLint
-npm run preview # Preview production build
+git clone https://github.com/sachin-gupta99/ContactNexus-UI.git
+cd ContactNexus-UI
+npm install
+npm start      # vite dev server on http://localhost:3000
 ```
 
-## 🛠️ Tech Stack
+The dev server proxies `/api/*` and `/uploads/*` to `http://localhost:8080` (see `vite.config.js`), so a locally running [ContactNexus-Service](https://github.com/sachin-gupta99/ContactNexus-Service) just works with no env vars.
 
-### **Core Technologies**
-- **React 18.2.0** - Modern UI library with hooks and concurrent features
-- **Vite** - Fast build tool and development server
-- **React Router DOM** - Client-side routing and navigation
-- **Redux Toolkit** - State management with modern Redux patterns
+### Scripts
 
-### **UI & Styling**
-- **Tailwind CSS** - Utility-first CSS framework
-- **Flowbite React** - Modern component library
-- **PostCSS** - CSS processing with autoprefixer
-- **Google Fonts (Orbitron)** - Custom typography
+| Command | What it does |
+| --- | --- |
+| `npm start` | Vite dev server, port 3000 |
+| `npm run build` | Production build into `dist/` |
+| `npm run preview` | Serve the built `dist/` locally |
+| `npm run lint` | ESLint (`--max-warnings 0`) |
 
-### **Development Tools**
-- **ESLint** - Code linting and quality assurance
-- **React Icons** - Comprehensive icon library
-- **Axios** - HTTP client for API requests
-- **JWT Decode** - JSON Web Token handling
+## Tech stack
 
-## 📁 Project Structure
+- **React 18** + **Vite 5** + **React Router 6**
+- **Redux Toolkit** for `user` + `toast` + `contact` slices
+- **Tailwind CSS 3** + **flowbite-react** for form primitives
+- **Axios** with request/response interceptors for auth
+- **react-icons**, **react-spinners**, **prop-types**, **jwt-decode**
+
+## Project structure
 
 ```
-ContactNexus-UI/
-├── public/
-│   └── favicon.ico
-├── src/
-│   ├── api/               # API integration layer
-│   │   ├── authApi.js     # Authentication endpoints
-│   │   ├── contactApi.js  # Contact management endpoints
-│   │   ├── userApi.js     # User profile endpoints
-│   │   └── axiosInstance.js
-│   ├── assets/            # Static assets
-│   │   ├── images/        # Application images
-│   │   └── logos/         # Brand assets
-│   ├── components/        # Reusable UI components
-│   │   ├── ContactCard.jsx
-│   │   ├── Navbar.jsx
-│   │   ├── SignInForm.jsx
-│   │   ├── SimpleSignUpForm.jsx
-│   │   ├── ImagePicker.jsx
-│   │   └── ...
-│   ├── layouts/           # Layout components
-│   │   └── RootLayout.jsx
-│   ├── pages/             # Page components
-│   │   ├── Auth.jsx
-│   │   ├── Home.jsx
-│   │   ├── Contacts.jsx
-│   │   └── Profile.jsx
-│   ├── store/             # Redux store
-│   │   ├── index.js
-│   │   ├── contact.js
-│   │   ├── user.js
-│   │   └── toast.js
-│   ├── util/              # Utility functions
-│   │   └── helper.js
-│   ├── App.jsx            # Main app component
-│   ├── main.jsx           # Application entry point
-│   └── index.css          # Global styles
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-└── postcss.config.js
+src/
+  App.jsx                   # createBrowserRouter root
+  main.jsx                  # ReactDOM + Redux Provider
+  api/
+    axiosInstance.js        # bearer header + single-flight 401 refresh
+    authApi.js              # /auth/signup, /login, /refresh, /logout, /me
+    userApi.js              # avatar upload
+    contactApi.js           # contact CRUD
+  util/
+    tokenStore.js           # in-memory access token (no localStorage)
+  store/
+    index.js                # root reducer
+    user.js                 # { user, authReady }
+    contact.js, toast.js
+  layouts/
+    RootLayout.jsx          # boot /refresh + layout shell
+  pages/
+    Auth.jsx, Home.jsx, Contacts.jsx, Profile.jsx, Settings.jsx
+  components/
+    SignInForm.jsx, SimpleSignUpForm.jsx
+    ProtectedRoute.jsx, Navbar.jsx, Dropdown.jsx
+    ContactCard.jsx, ImagePicker.jsx, ToastContainer.jsx
+    ...
 ```
 
-## 🎨 Design System
+## Deployment
 
-### **Color Palette**
-- **Primary**: Cyan (#06b6d4) to Blue (#2563eb) gradients
-- **Background**: Slate variants (#0f172a, #1e293b, #334155)
-- **Text**: Zinc and slate variants for optimal contrast
-- **Accents**: Purple highlights for special elements
+Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` + `/uploads/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call).
 
-### **Typography**
-- **Headings**: Orbitron font family for modern, futuristic look
-- **Body**: Default system fonts for optimal readability
-- **Sizes**: Responsive typography scale
+Full walkthrough: [DEPLOY.md](DEPLOY.md).
 
-### **Components**
-- **Glass morphism**: Backdrop blur effects with transparency
-- **Rounded corners**: Consistent border radius scale
-- **Shadows**: Layered shadow system for depth
-- **Hover states**: Smooth transitions and interactions
+| Environment | URL |
+| --- | --- |
+| Production UI | [contactnexus.vercel.app](https://contactnexus.vercel.app) |
+| Production API | [contactnexus-service.onrender.com](https://contactnexus-service.onrender.com) |
 
-## 🔧 Configuration
+## License
 
-### **Environment Setup**
-Create a `.env` file in the root directory:
-```env
-VITE_API_BASE_URL=your_api_base_url
-VITE_APP_NAME=ContactNexus
-```
-
-### **Tailwind Configuration**
-The project uses a custom Tailwind configuration with:
-- Custom font families (Orbitron)
-- Extended color palette
-- Custom spacing and sizing
-- Responsive breakpoints
-
-## 📱 Responsive Design
-
-ContactNexus UI is fully responsive and optimized for:
-- **Desktop** (1024px+) - Full feature layout with centered navigation
-- **Tablet** (768px - 1023px) - Adapted grid layouts
-- **Mobile** (320px - 767px) - Stacked layouts with hamburger menu
-
-## 🚀 Production Build
-
-To build the application for production:
-
-```bash
-npm run build
-```
-
-The build artifacts will be stored in the `dist/` directory, optimized and ready for deployment.
-
-## 🤝 Contributing
-
-We welcome contributions to ContactNexus UI! Please follow these steps:
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-4. **Push to the branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
-
-### **Development Guidelines**
-- Follow the existing code style and structure
-- Write meaningful commit messages
-- Test your changes thoroughly
-- Update documentation when necessary
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-**Sachin Gupta**
-- GitHub: [@sachin-gupta99](https://github.com/sachin-gupta99)
-- Project: [ContactNexus-UI](https://github.com/sachin-gupta99/ContactNexus-UI)
-
-## 🙏 Acknowledgments
-
-- **React Team** for the amazing framework
-- **Tailwind CSS** for the utility-first approach
-- **Flowbite** for beautiful React components
-- **Vite** for the lightning-fast development experience
-
----
-
-<div align="center">
-  <p>Made with ❤️ for modern contact management</p>
-  <p>⭐ Star this repo if you found it helpful!</p>
-</div>
+MIT — see [LICENSE](LICENSE).
