@@ -103,9 +103,13 @@ const SignInForm = () => {
               Remember me
             </Label>
           </div>
-          <a href="#" className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200">
+          <button
+            type="button"
+            onClick={() => router.navigate("/auth?mode=forgot")}
+            className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          >
             Forgot your password?
-          </a>
+          </button>
         </div>
 
         <Button 
