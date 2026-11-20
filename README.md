@@ -20,9 +20,11 @@
 
 - **Dark theme** with cyan→blue gradients and glassmorphism accents.
 - **Signup / login** with full profile capture (work, address, socials, bio, avatar).
-- **Contact CRUD** — list, search, paginate, view, edit, delete.
+- **Forgot / reset password** — email-driven flow, single-use tokens, every session revoked on reset.
+- **Server-side contact search + pagination** — debounced search box, request-id race guard, page controls (12 per page by default).
 - **Avatar upload** with live preview.
 - **Secure session flow** — short-lived access JWT + HttpOnly refresh cookie, transparent refresh on 401.
+- **Loud 429 handling** — the login toast surfaces the server's rate-limit message instead of swallowing it as "Invalid credentials".
 
 ## Auth model (quick tour)
 
@@ -32,8 +34,22 @@ The UI never writes to `localStorage` for auth state. Instead:
 - The **refresh token** lives in an HttpOnly cookie set by the server. JavaScript can't read it.
 - When any API call returns `401`, the axios response interceptor (`src/api/axiosInstance.js`) silently hits `/api/v1/auth/refresh`, gets a new access token, and retries the original request. A single-flight guard coalesces parallel 401s so only one `/refresh` ever fires at a time.
 - On page reload, `RootLayout` calls `/refresh` once at boot to swap the refresh cookie for a fresh access token and rehydrate the current user.
+- Password reset links land on `/auth?mode=reset&token=…`; a successful reset revokes every refresh-token family on the server, so all other open tabs 401 on their next request.
 
 See [ContactNexus-Service's refresh-token design](https://github.com/sachin-gupta99/ContactNexus-Service#authentication) for the server side.
+
+## Routes
+
+| Path | Component | Protected? |
+| --- | --- | --- |
+| `/home` | `pages/Home.jsx` | public |
+| `/auth?mode=signin` | `components/SignInForm.jsx` | public |
+| `/auth?mode=signup` | `components/SimpleSignUpForm.jsx` | public |
+| `/auth?mode=forgot` | `components/ForgotPasswordForm.jsx` | public |
+| `/auth?mode=reset&token=…` | `components/ResetPasswordForm.jsx` | public |
+| `/contacts` | `pages/Contacts.jsx` | ✅ |
+| `/profile` | `pages/Profile.jsx` | ✅ |
+| `/settings` | `pages/Settings.jsx` | ✅ |
 
 ## Quick start
 
@@ -67,25 +83,29 @@ The dev server proxies `/api/*` and `/uploads/*` to `http://localhost:8080` (see
 
 ```
 src/
-  App.jsx                   # createBrowserRouter root
-  main.jsx                  # ReactDOM + Redux Provider
+  App.jsx                       # createBrowserRouter root
+  main.jsx                      # ReactDOM + Redux Provider
   api/
-    axiosInstance.js        # bearer header + single-flight 401 refresh
-    authApi.js              # /auth/signup, /login, /refresh, /logout, /me
-    userApi.js              # avatar upload
-    contactApi.js           # contact CRUD
+    axiosInstance.js            # bearer header + single-flight 401 refresh
+    authApi.js                  # signup / login / refresh / logout / me
+                                # + forgotPassword / resetPassword
+    userApi.js                  # avatar upload
+    contactApi.js               # list (q, page, size, sort), get, create, update, delete
   util/
-    tokenStore.js           # in-memory access token (no localStorage)
+    tokenStore.js               # in-memory access token (no localStorage)
   store/
-    index.js                # root reducer
-    user.js                 # { user, authReady }
+    index.js                    # root reducer
+    user.js                     # { user, authReady }
     contact.js, toast.js
   layouts/
-    RootLayout.jsx          # boot /refresh + layout shell
+    RootLayout.jsx              # boot /refresh + layout shell
   pages/
-    Auth.jsx, Home.jsx, Contacts.jsx, Profile.jsx, Settings.jsx
+    Auth.jsx                    # routes to SignIn / SignUp / Forgot / Reset form
+    Home.jsx, Contacts.jsx      # Contacts = paginated + searchable, backed by real API
+    Profile.jsx, Settings.jsx
   components/
     SignInForm.jsx, SimpleSignUpForm.jsx
+    ForgotPasswordForm.jsx, ResetPasswordForm.jsx
     ProtectedRoute.jsx, Navbar.jsx, Dropdown.jsx
     ContactCard.jsx, ImagePicker.jsx, ToastContainer.jsx
     ...
@@ -93,7 +113,7 @@ src/
 
 ## Deployment
 
-Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` + `/uploads/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call).
+Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` + `/uploads/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call). A catch-all rewrite to `/index.html` handles SPA deep links.
 
 Full walkthrough: [DEPLOY.md](DEPLOY.md).
 
@@ -101,6 +121,19 @@ Full walkthrough: [DEPLOY.md](DEPLOY.md).
 | --- | --- |
 | Production UI | [contactnexus.vercel.app](https://contactnexus.vercel.app) |
 | Production API | [contactnexus-service.onrender.com](https://contactnexus-service.onrender.com) |
+
+## Roadmap
+
+- [x] JWT + refresh-token auth with transparent refresh on 401
+- [x] Full-profile signup + login
+- [x] Forgot / reset password UI
+- [x] Contacts page backed by the real paginated API with debounced search
+- [ ] Add / edit / delete contact UI (API routes already exist in `contactApi.js`)
+- [ ] Favourites and contact tags
+- [ ] "Active sessions" screen letting users revoke individual refresh-token families
+- [ ] Migration to TypeScript
+- [ ] Swap flowbite-react for shadcn/ui
+- [ ] React Query for API state (kills the manual `useEffect` + `reqIdRef` patterns)
 
 ## License
 
