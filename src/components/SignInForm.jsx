@@ -50,9 +50,11 @@ const SignInForm = () => {
         );
       }
     } catch (error) {
-      dispatch(
-        toastActions.setToast({ message: "Invalid credentials", type: "error" })
-      );
+      // Prefer the server's own message so 429 ("Too many requests. Try again
+      // in N seconds.") and other explicit errors reach the user. Falls back
+      // to the generic one only when the server didn't send a body.
+      const message = error.response?.data?.message || "Invalid credentials";
+      dispatch(toastActions.setToast({ message, type: "error" }));
     }
   };
 
