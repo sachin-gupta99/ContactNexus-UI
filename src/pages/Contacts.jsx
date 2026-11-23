@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pagination, TextInput, Button, Badge, Spinner } from "flowbite-react";
 import { FaSearch, FaPlus, FaUserFriends } from "react-icons/fa";
 import ContactCard from "../components/ContactCard";
-import { listContactsRoute } from "../api/contactApi";
+import ContactFormModal from "../components/ContactFormModal";
+import ConfirmModal from "../components/ConfirmModal";
+import { listContactsRoute, deleteContactRoute } from "../api/contactApi";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
 
@@ -16,6 +18,17 @@ const Contacts = () => {
   const [debouncedQ, setDebouncedQ] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState({ content: [], totalElements: 0, totalPages: 0 });
+
+  // Bumped after create / update / delete to force a re-fetch of the current
+  // page. Alternative would be to mutate `page.content` optimistically, but
+  // that would get totalElements / totalPages wrong without extra math.
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);         // null => create mode
+  const [deleteTarget, setDeleteTarget] = useState(null);     // contact to delete, or null
+  const [deleting, setDeleting] = useState(false);
+
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -31,9 +44,8 @@ const Contacts = () => {
     return () => clearTimeout(id);
   }, [searchTerm]);
 
-  // Fetch whenever the committed query or page changes. A request-id guard
-  // (reqIdRef) prevents a slow earlier response from overwriting a newer one
-  // if the user types fast.
+  // Fetch whenever the committed query, page, or refreshKey changes.
+  // reqIdRef prevents a slow earlier response from overwriting a newer one.
   const reqIdRef = useRef(0);
   useEffect(() => {
     const myReq = ++reqIdRef.current;
@@ -53,7 +65,51 @@ const Contacts = () => {
       .finally(() => {
         if (reqIdRef.current === myReq) setIsLoading(false);
       });
-  }, [debouncedQ, uiPage, dispatch]);
+  }, [debouncedQ, uiPage, refreshKey, dispatch]);
+
+  const openCreate = () => {
+    setEditTarget(null);
+    setFormOpen(true);
+  };
+
+  const openEdit = (contact) => {
+    setEditTarget(contact);
+    setFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditTarget(null);
+  };
+
+  const handleSaved = () => {
+    // Create usually lands on the first page; edits keep current page. Either
+    // way bump refreshKey and let the fetch effect do its thing.
+    if (!editTarget) setUiPage(1);
+    setRefreshKey((k) => k + 1);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteContactRoute(deleteTarget.id);
+      dispatch(toastActions.setToast({ message: "Contact deleted", type: "success" }));
+      // If we just emptied the current page (and there's a previous one), step back.
+      if (page.content.length === 1 && uiPage > 1) {
+        setUiPage(uiPage - 1);
+      }
+      setRefreshKey((k) => k + 1);
+      setDeleteTarget(null);
+    } catch (err) {
+      dispatch(toastActions.setToast({
+        message: err.response?.data?.message || "Could not delete contact",
+        type: "error",
+      }));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const contacts = page.content || [];
 
@@ -75,7 +131,11 @@ const Contacts = () => {
               </div>
             </div>
 
-            <Button gradientDuoTone="purpleToBlue" className="w-fit font-semibold" disabled title="Coming soon">
+            <Button
+              gradientDuoTone="purpleToBlue"
+              className="w-fit font-semibold"
+              onClick={openCreate}
+            >
               <FaPlus className="w-4 h-4 mr-2" />
               Add Contact
             </Button>
@@ -116,6 +176,8 @@ const Contacts = () => {
                   isFavorite={false}
                   onToggleFavorite={() => {}}
                   onShare={() => {}}
+                  onEdit={() => openEdit(c)}
+                  onDelete={() => setDeleteTarget(c)}
                 />
               );
             })}
@@ -127,10 +189,14 @@ const Contacts = () => {
             </div>
             <h3 className="text-xl font-medium text-gray-900 mb-2">No contacts found</h3>
             <p className="text-gray-500 mb-6">
-              {debouncedQ
-                ? "Try a different search term."
-                : "Get started by adding your first contact."}
+              {debouncedQ ? "Try a different search term." : "Get started by adding your first contact."}
             </p>
+            {!debouncedQ && (
+              <Button gradientDuoTone="purpleToBlue" className="font-semibold mx-auto" onClick={openCreate}>
+                <FaPlus className="w-4 h-4 mr-2" />
+                Add your first contact
+              </Button>
+            )}
           </div>
         )}
 
@@ -147,6 +213,25 @@ const Contacts = () => {
           </div>
         )}
       </div>
+
+      <ContactFormModal
+        isOpen={formOpen}
+        onClose={closeForm}
+        onSaved={handleSaved}
+        initialContact={editTarget}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete this contact?"
+        message={deleteTarget
+          ? `${[deleteTarget.firstName, deleteTarget.lastName].filter(Boolean).join(" ") || deleteTarget.email} will be removed permanently.`
+          : ""}
+        confirmLabel="Delete"
+        busy={deleting}
+      />
     </div>
   );
 };
