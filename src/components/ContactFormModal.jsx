@@ -75,15 +75,20 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
     }
   };
 
+  // `form="contact-form"` on the Footer submit button lets the <form> stay
+  // inside Modal.Body (so flowbite's own scroll container still works) while
+  // the button sits outside it. Without this split, wrapping Modal.Body +
+  // Modal.Footer in a <form> breaks the Body's internal scroll - the modal
+  // stops at the viewport and anything past the fold is unreachable.
   return (
-    <Modal show={isOpen} onClose={onClose} size="4xl">
+    <Modal show={isOpen} onClose={onClose} size="4xl" dismissible>
       <Modal.Header>
         <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           {isEdit ? "Edit contact" : "Add contact"}
         </span>
       </Modal.Header>
-      <form onSubmit={handleSubmit}>
-        <Modal.Body>
+      <Modal.Body className="max-h-[70vh] overflow-y-auto">
+        <form id="contact-form" onSubmit={handleSubmit}>
           <div className="space-y-6">
             {/* Basic */}
             <section className="space-y-4">
@@ -175,16 +180,21 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
               </div>
             </section>
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button type="submit" gradientDuoTone="purpleToBlue" disabled={submitting}>
-            {submitting ? "Saving..." : isEdit ? "Save changes" : "Create contact"}
-          </Button>
-          <Button color="gray" onClick={onClose} disabled={submitting}>
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </form>
+        </form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button
+          type="submit"
+          form="contact-form"
+          gradientDuoTone="purpleToBlue"
+          disabled={submitting}
+        >
+          {submitting ? "Saving..." : isEdit ? "Save changes" : "Create contact"}
+        </Button>
+        <Button color="gray" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+      </Modal.Footer>
     </Modal>
   );
 };
