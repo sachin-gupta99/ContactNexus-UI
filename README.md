@@ -62,6 +62,8 @@ npm start      # vite dev server on http://localhost:3000
 
 The dev server proxies `/api/*` and `/uploads/*` to `http://localhost:8080` (see `vite.config.js`), so a locally running [ContactNexus-Service](https://github.com/sachin-gupta99/ContactNexus-Service) just works with no env vars.
 
+Node 20+ recommended.
+
 ### Scripts
 
 | Command | What it does |
