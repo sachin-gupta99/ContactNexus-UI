@@ -22,7 +22,7 @@
 - **Signup / login** with full profile capture (work, address, socials, bio, avatar).
 - **Forgot / reset password** — email-driven flow, single-use tokens, every session revoked on reset.
 - **Server-side contact search + pagination** — debounced search box, request-id race guard, page controls (12 per page by default).
-- **Avatar upload** with live preview.
+- **Avatar upload** with live preview — stored in a private S3 bucket and displayed through presigned URLs returned by the API.
 - **Secure session flow** — short-lived access JWT + HttpOnly refresh cookie, transparent refresh on 401.
 - **Loud 429 handling** — the login toast surfaces the server's rate-limit message instead of swallowing it as "Invalid credentials".
 
@@ -60,7 +60,7 @@ npm install
 npm start      # vite dev server on http://localhost:3000
 ```
 
-The dev server proxies `/api/*` and `/uploads/*` to `http://localhost:8080` (see `vite.config.js`), so a locally running [ContactNexus-Service](https://github.com/sachin-gupta99/ContactNexus-Service) just works with no env vars.
+The dev server proxies `/api/*` to `http://localhost:8080` (see `vite.config.js`), so a locally running [ContactNexus-Service](https://github.com/sachin-gupta99/ContactNexus-Service) just works with no env vars.
 
 Node 20+ recommended.
 
@@ -115,7 +115,7 @@ src/
 
 ## Deployment
 
-Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` + `/uploads/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call). A catch-all rewrite to `/index.html` handles SPA deep links.
+Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call). A catch-all rewrite to `/index.html` handles SPA deep links.
 
 Full walkthrough: [DEPLOY.md](DEPLOY.md).
 
