@@ -7,7 +7,8 @@ import { toastActions } from "../store/toast";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
 
-const ImagePicker = forwardRef(({ label, name }, ref) => {
+// `initialImage` is shown until the user picks a new file (e.g. the current avatar).
+const ImagePicker = forwardRef(({ label, name, initialImage }, ref) => {
   const [image, setImage] = useState(null);
   const dispatch = useDispatch();
 
@@ -55,14 +56,14 @@ const ImagePicker = forwardRef(({ label, name }, ref) => {
       </label>
       <div className="flex items-center gap-6 mb-4">
         <div className="w-32 h-32 border-2 border-gray-300 rounded-lg flex justify-center items-center text-center bg-gray-50 relative overflow-hidden">
-          {image && (
+          {(image || initialImage) && (
             <img
-              src={image}
+              src={image || initialImage}
               alt="Preview"
               className="w-full h-full object-cover rounded-md"
             />
           )}
-          {!image && (
+          {!image && !initialImage && (
             <p className="text-gray-400 text-sm p-4">
               No image selected
             </p>
