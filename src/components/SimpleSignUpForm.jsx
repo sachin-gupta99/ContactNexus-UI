@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { HiMail, HiUser } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { FaPhoneAlt, FaStreetView, FaCity, FaGithub, FaLinkedin, FaInstagramSquare } from "react-icons/fa";
@@ -17,6 +17,7 @@ import { router } from "../App";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
 import { userActions } from "../store/user";
+import { useSlowHint } from "../util/useSlowHint";
 
 const SimpleSignUpForm = () => {
   const nameRef = useRef();
@@ -40,10 +41,14 @@ const SimpleSignUpForm = () => {
   const bioHeadingRef = useRef();
   const bioDescRef = useRef();
   const dispatch = useDispatch();
+  // null while idle, then "creating" -> "uploading" (only when an image was picked).
+  const [stage, setStage] = useState(null);
+  const slow = useSlowHint(Boolean(stage));
 
   const handleSubmit = async (e) => {
     try {
       e.preventDefault();
+      if (stage) return;
 
       const name = nameRef.current?.value;
       const email = emailRef.current?.value;
@@ -127,13 +132,7 @@ const SimpleSignUpForm = () => {
         return;
       }
 
-      dispatch(
-        toastActions.setToast({
-          message: "Creating your account...",
-          type: "info",
-        })
-      );
-
+      setStage("creating");
       const response = await signUpRoute({
         name,
         email,
@@ -166,6 +165,7 @@ const SimpleSignUpForm = () => {
         let message = "Account created successfully";
 
         if (image) {
+          setStage("uploading");
           try {
             const avatar = await uploadAvatarRoute(image);
             user = {
@@ -206,6 +206,8 @@ const SimpleSignUpForm = () => {
 
       passwordRef.current.value = "";
       confirmPasswordRef.current.value = "";
+    } finally {
+      setStage(null);
     }
   };
 
@@ -220,7 +222,10 @@ const SimpleSignUpForm = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit}>
+        {/* A disabled fieldset locks every input and the submit button while the
+            request is in flight, so a second click can't fire a duplicate signup. */}
+        <fieldset disabled={Boolean(stage)} className="space-y-6">
         {/* Personal Details Section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-blue-600 border-b border-gray-300 pb-2">Personal Details</h3>
@@ -535,14 +540,25 @@ const SimpleSignUpForm = () => {
           </Label>
         </div>
 
-        <Button 
-          type="submit" 
-          gradientDuoTone="purpleToBlue" 
+        <Button
+          type="submit"
+          gradientDuoTone="purpleToBlue"
           className="w-full font-semibold"
           size="lg"
+          isProcessing={Boolean(stage)}
         >
-          Create account
+          {stage === "uploading"
+            ? "Uploading photo..."
+            : stage === "creating"
+              ? "Creating your account..."
+              : "Create account"}
         </Button>
+        {slow && (
+          <p className="text-center text-sm text-gray-500" role="status">
+            Still working. The server may be waking up, which can take up to 30 seconds.
+          </p>
+        )}
+        </fieldset>
       </form>
     </div>
   );

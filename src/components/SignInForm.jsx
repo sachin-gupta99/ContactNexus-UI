@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { Button, Label, TextInput, Checkbox } from "flowbite-react";
@@ -8,22 +8,20 @@ import { router } from "../App";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
 import { userActions } from "../store/user";
+import { useSlowHint } from "../util/useSlowHint";
 
 const SignInForm = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
   const dispatch = useDispatch();
+  const [submitting, setSubmitting] = useState(false);
+  const slow = useSlowHint(submitting);
 
   const handleSubmit = async (e) => {
     try {
       e.preventDefault();
-
-      dispatch(
-        toastActions.setToast({
-          message: "Signing in...",
-          type: "info",
-        })
-      );
+      if (submitting) return;
+      setSubmitting(true);
 
       const email = emailRef.current.value;
       const password = passwordRef.current.value;
@@ -55,6 +53,8 @@ const SignInForm = () => {
       // to the generic one only when the server didn't send a body.
       const message = error.response?.data?.message || "Invalid credentials";
       dispatch(toastActions.setToast({ message, type: "error" }));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -69,7 +69,8 @@ const SignInForm = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit}>
+        <fieldset disabled={submitting} className="space-y-6">
         <div>
           <div className="mb-2 block">
             <Label htmlFor="email" value="Email address" className="text-gray-700 font-medium" />
@@ -114,14 +115,21 @@ const SignInForm = () => {
           </button>
         </div>
 
-        <Button 
-          type="submit" 
-          gradientDuoTone="purpleToBlue" 
+        <Button
+          type="submit"
+          gradientDuoTone="purpleToBlue"
           className="w-full font-semibold"
           size="lg"
+          isProcessing={submitting}
         >
-          Sign in
+          {submitting ? "Signing in..." : "Sign in"}
         </Button>
+        {slow && (
+          <p className="text-center text-sm text-gray-500" role="status">
+            Still working. The server may be waking up, which can take up to 30 seconds.
+          </p>
+        )}
+        </fieldset>
       </form>
     </div>
   );
