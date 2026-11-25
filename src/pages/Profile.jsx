@@ -22,9 +22,11 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import { Spinner } from "flowbite-react";
+import EditProfileModal from "../components/EditProfileModal";
 
 const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [editOpen, setEditOpen] = useState(false);
   const user = useSelector((state) => state.user?.user);
 
   useEffect(() => {
@@ -157,6 +159,7 @@ const Profile = () => {
                       <Button
                         gradientDuoTone="cyanToBlue"
                         className="flex-1 font-semibold py-3"
+                        onClick={() => setEditOpen(true)}
                       >
                         <FaEdit className="w-4 h-4 mr-2" />
                         Edit Profile
@@ -306,6 +309,7 @@ const Profile = () => {
           </div>
         </div>
       )}
+      <EditProfileModal isOpen={editOpen} onClose={() => setEditOpen(false)} user={user} />
     </div>
   );
 };
