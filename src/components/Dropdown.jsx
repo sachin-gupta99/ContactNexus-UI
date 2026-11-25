@@ -13,6 +13,8 @@ import { userActions } from "../store/user";
 const Dropdown = ({ isOpen, toggleDropdown }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user?.user);
+  // Presigned S3 URL from the API (or an external URL); null falls back to initials.
+  const avatarUrl = user?.profile?.imageUrl;
 
   const onLogout = async () => {
     try {
@@ -33,9 +35,9 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
           className="w-10 h-10 rounded-full overflow-hidden cursor-pointer ring-2 ring-white/20 hover:ring-white/40 transition-all duration-300 transform hover:scale-105"
           onClick={toggleDropdown}
         >
-          {user?.image ? (
+          {avatarUrl ? (
             <img
-              src={user.image}
+              src={avatarUrl}
               alt="User Avatar"
               className="w-full h-full object-cover"
             />
@@ -57,9 +59,9 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 rounded-full overflow-hidden">
-                {user?.image ? (
+                {avatarUrl ? (
                   <img
-                    src={user.image}
+                    src={avatarUrl}
                     alt="User Avatar"
                     className="w-full h-full object-cover"
                   />
