@@ -9,14 +9,25 @@ import { logoutRoute } from "../api/authApi";
 import { clearAccessToken } from "../util/tokenStore";
 import { router } from "../App";
 import { userActions } from "../store/user";
+import { toastActions } from "../store/toast";
+import { buildVCard, shareVCard, userToCard } from "../util/vcard";
 
-const Dropdown = ({ isOpen, toggleDropdown }) => {
+const Dropdown = ({ isOpen, toggleDropdown, onClose }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user?.user);
   // Presigned S3 URL from the API (or an external URL); null falls back to initials.
   const avatarUrl = user?.profile?.imageUrl;
 
+  const onContactCard = async () => {
+    onClose?.();
+    const result = await shareVCard(buildVCard(userToCard(user)), user?.name || "My card");
+    if (result === "downloaded") {
+      dispatch(toastActions.setToast({ message: "Your contact card was downloaded", type: "success" }));
+    }
+  };
+
   const onLogout = async () => {
+    onClose?.();
     try {
       await logoutRoute();
     } catch {
@@ -84,30 +95,36 @@ const Dropdown = ({ isOpen, toggleDropdown }) => {
 
           {/* Menu Items */}
           <div className="py-1">
-            <Link to="/profile" className="dropdown-item flex items-center space-x-3">
+            <Link to="/profile" onClick={onClose} className="dropdown-item flex items-center space-x-3">
               <IoPerson className="w-4 h-4 text-blue-500" />
               <span>Profile</span>
             </Link>
 
-            <div className="dropdown-item flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={onContactCard}
+              className="dropdown-item w-full text-left flex items-center space-x-3"
+              title="Share or download your details as a vCard"
+            >
               <FaAddressCard className="w-4 h-4 text-green-500" />
-              <span>Contact Card</span>
-            </div>
+              <span>My Contact Card</span>
+            </button>
 
-            <Link to="/settings" className="dropdown-item flex items-center space-x-3">
+            <Link to="/settings" onClick={onClose} className="dropdown-item flex items-center space-x-3">
               <IoMdSettings className="w-4 h-4 text-gray-500" />
               <span>Settings</span>
             </Link>
 
             <div className="border-t border-gray-100 my-1"></div>
 
-            <div
-              className="dropdown-item flex items-center space-x-3 text-red-600 hover:bg-red-50 hover:border-red-500"
+            <button
+              type="button"
+              className="dropdown-item w-full text-left flex items-center space-x-3 text-red-600 hover:bg-red-50 hover:border-red-500"
               onClick={onLogout}
             >
               <IoLogOut className="w-4 h-4" />
               <span>Sign out</span>
-            </div>
+            </button>
           </div>
         </div>
       )}

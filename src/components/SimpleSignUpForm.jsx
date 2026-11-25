@@ -530,11 +530,11 @@ const SimpleSignUpForm = () => {
           <Checkbox id="terms" required />
           <Label htmlFor="terms" className="text-sm text-gray-600" >
             I agree to the{" "}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
               Privacy Policy
             </a>
           </Label>

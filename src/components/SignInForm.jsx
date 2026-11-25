@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { RiLockPasswordFill } from "react-icons/ri";
-import { Button, Label, TextInput, Checkbox } from "flowbite-react";
+import { Button, Label, TextInput } from "flowbite-react";
 import { loginRoute } from "../api/authApi";
 import { setAccessToken } from "../util/tokenStore";
 import { router } from "../App";
@@ -99,13 +99,7 @@ const SignInForm = () => {
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Checkbox id="remember" />
-            <Label htmlFor="remember" className="text-sm text-gray-600">
-              Remember me
-            </Label>
-          </div>
+        <div className="flex items-center justify-end">
           <button
             type="button"
             onClick={() => router.navigate("/auth?mode=forgot")}

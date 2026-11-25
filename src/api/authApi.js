@@ -29,3 +29,14 @@ export const forgotPasswordRoute = (email) => {
 export const resetPasswordRoute = (token, newPassword) => {
   return axiosInstance.post("/api/v1/auth/reset-password", { token, newPassword });
 };
+
+// Signs out every other device and returns a fresh { accessToken, user } for
+// this one. 400 if the current password is wrong.
+export const changePasswordRoute = (currentPassword, newPassword) => {
+  return axiosInstance.post("/api/v1/auth/change-password", { currentPassword, newPassword });
+};
+
+// Revokes every refresh token, this device included.
+export const logoutAllRoute = () => {
+  return axiosInstance.post("/api/v1/auth/logout-all");
+};

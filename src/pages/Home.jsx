@@ -1,19 +1,51 @@
-import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import HomePageLogo from "../assets/HomePagePic.jpg";
 import MeetingDifferentPeople from "../assets/MeetingDifferentPeople.jpg";
 import SaveContacts from "../assets/SaveContacts.jpg";
 import ShareContact from "../assets/ShareContact.jpg";
-import { FaArrowRight, FaShieldAlt, FaShareAlt, FaStar, FaUsers, FaHeart, FaGlobe } from "react-icons/fa";
-import { Button, Card, Badge } from "flowbite-react";
+import {
+  FaArrowRight, FaShieldAlt, FaShareAlt, FaStar, FaUsers, FaHeart,
+  FaUserPlus, FaFileExport,
+} from "react-icons/fa";
+import { Button, Card, Badge, Spinner, Avatar } from "flowbite-react";
+import { contactStatsRoute, listContactsRoute } from "../api/contactApi";
+import { exportAllContacts } from "../util/exportContacts";
+import { toastActions } from "../store/toast";
+
+const RECENT_COUNT = 5;
+
+const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+const STEPS = [
+  ["year", 31_536_000], ["month", 2_592_000], ["week", 604_800],
+  ["day", 86_400], ["hour", 3_600], ["minute", 60],
+];
+const timeAgo = (iso) => {
+  const seconds = (new Date(iso).getTime() - Date.now()) / 1000;
+  for (const [unit, size] of STEPS) {
+    if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
+  }
+  return "just now";
+};
+
+const scrollToFeatures = () =>
+  document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
 
 const Home = () => {
   const user = useSelector((state) => state.user?.user);
   const isLoggedIn = !!user;
+  const navigate = useNavigate();
+  const { hash } = useLocation();
 
   useEffect(() => {
     document.title = "Contact Nexus - Home";
   }, []);
+
+  // The footer links to /home#features; the router doesn't scroll to hashes itself.
+  useEffect(() => {
+    if (hash === "#features") scrollToFeatures();
+  }, [hash]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -29,7 +61,7 @@ const Home = () => {
                       <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
                         Welcome back,
                         <span className="ml-5 bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
-                          {user?.name?.split(' ')[0] || 'User'}
+                          {user?.name?.split(" ")[0] || "User"}
                         </span>
                       </h1>
                       <p className="text-xl text-slate-200 leading-relaxed max-w-lg">
@@ -39,53 +71,57 @@ const Home = () => {
                   ) : (
                     <>
                       <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-                        One place for all your 
+                        One place for all your
                         <span className="ml-5 bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
-                           contacts
+                          contacts
                         </span>
                       </h1>
                       <p className="text-xl text-slate-200 leading-relaxed max-w-lg">
-                        Manage, organize, and share all your contacts seamlessly with our modern contact management platform.
+                        Save, search, star and share your contacts from any device.
                       </p>
                     </>
                   )}
                 </div>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   {isLoggedIn ? (
                     <>
-                      <Button 
-                        gradientDuoTone="cyanToBlue" 
+                      <Button
+                        gradientDuoTone="cyanToBlue"
                         size="xl"
                         className="font-semibold"
+                        onClick={() => navigate("/contacts")}
                       >
                         <span className="flex items-center gap-2">
                           View My Contacts <FaUsers />
                         </span>
                       </Button>
-                      <Button 
-                        color="light" 
+                      <Button
+                        color="light"
                         size="xl"
                         className="font-semibold"
+                        onClick={() => navigate("/contacts?new=1")}
                       >
                         Add New Contact
                       </Button>
                     </>
                   ) : (
                     <>
-                      <Button 
-                        gradientDuoTone="cyanToBlue" 
+                      <Button
+                        gradientDuoTone="cyanToBlue"
                         size="xl"
                         className="font-semibold"
+                        onClick={() => navigate("/auth?mode=signup")}
                       >
                         <span className="flex items-center gap-2">
                           Get Started Free <FaArrowRight />
                         </span>
                       </Button>
-                      <Button 
-                        color="light" 
+                      <Button
+                        color="light"
                         size="xl"
                         className="font-semibold"
+                        onClick={scrollToFeatures}
                       >
                         Learn More
                       </Button>
@@ -115,191 +151,10 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Stats Section - Only show for non-logged-in users */}
-      {!isLoggedIn && (
-        <div className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                <div className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                  1M+
-                </div>
-                <div className="text-xl font-semibold text-gray-600">
-                  Contacts Shared
-                </div>
-                <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mt-4 rounded-full"></div>
-              </Card>
-              
-              <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                <div className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                  95%
-                </div>
-                <div className="text-xl font-semibold text-gray-600">
-                  User Satisfaction
-                </div>
-                <div className="w-20 h-1 bg-gradient-to-r from-green-500 to-blue-600 mx-auto mt-4 rounded-full"></div>
-              </Card>
-              
-              <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                <div className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                  50K+
-                </div>
-                <div className="text-xl font-semibold text-gray-600">
-                  Active Users
-                </div>
-                <div className="w-20 h-1 bg-gradient-to-r from-purple-500 to-pink-600 mx-auto mt-4 rounded-full"></div>
-              </Card>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Process Section - Only show for non-logged-in users */}
-      {!isLoggedIn && <StandardProcedure />}
-
-      {/* Personalized Dashboard Section - Only for logged-in users */}
-      {isLoggedIn && (
-        <div className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Quick Stats for User */}
-            <div className="mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center">
-                Your Contact Overview
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                  <div className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                    12
-                  </div>
-                  <div className="text-lg font-semibold text-gray-600">
-                    Total Contacts
-                  </div>
-                  <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto mt-3 rounded-full"></div>
-                </Card>
-                
-                <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                  <div className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                    5
-                  </div>
-                  <div className="text-lg font-semibold text-gray-600">
-                    Favorites
-                  </div>
-                  <div className="w-16 h-1 bg-gradient-to-r from-green-500 to-blue-600 mx-auto mt-3 rounded-full"></div>
-                </Card>
-                
-                <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                  <div className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    3
-                  </div>
-                  <div className="text-lg font-semibold text-gray-600">
-                    Added This Week
-                  </div>
-                  <div className="w-16 h-1 bg-gradient-to-r from-purple-500 to-pink-600 mx-auto mt-3 rounded-full"></div>
-                </Card>
-
-                <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
-                  <div className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-                    8
-                  </div>
-                  <div className="text-lg font-semibold text-gray-600">
-                    Groups
-                  </div>
-                  <div className="w-16 h-1 bg-gradient-to-r from-orange-500 to-red-600 mx-auto mt-3 rounded-full"></div>
-                </Card>
-              </div>
-            </div>
-
-            {/* Quick Actions Section */}
-            <div className="mb-16">
-              <h3 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                Quick Actions
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="group hover:scale-105 transition-transform duration-300 border-0 shadow-lg cursor-pointer">
-                  <div className="text-center p-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <FaUsers className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-800 mb-2">Add New Contact</h4>
-                    <p className="text-gray-600">Quickly add a new contact to your network</p>
-                  </div>
-                </Card>
-
-                <Card className="group hover:scale-105 transition-transform duration-300 border-0 shadow-lg cursor-pointer">
-                  <div className="text-center p-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <FaHeart className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-800 mb-2">View Favorites</h4>
-                    <p className="text-gray-600">Access your most important contacts</p>
-                  </div>
-                </Card>
-
-                <Card className="group hover:scale-105 transition-transform duration-300 border-0 shadow-lg cursor-pointer">
-                  <div className="text-center p-6">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <FaShareAlt className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-800 mb-2">Share Contacts</h4>
-                    <p className="text-gray-600">Share your contacts with team members</p>
-                  </div>
-                </Card>
-              </div>
-            </div>
-
-            {/* Recent Activity Section */}
-            <div className="mb-4">
-              <h3 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                Recent Activity
-              </h3>
-              <Card className="border-0 shadow-lg">
-                <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg">
-                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                        <FaUsers className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-800">Added John Doe to contacts</p>
-                        <p className="text-sm text-gray-600">2 hours ago</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-lg">
-                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                        <FaHeart className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-800">Marked Jane Smith as favorite</p>
-                        <p className="text-sm text-gray-600">1 day ago</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg">
-                      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
-                        <FaShareAlt className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-800">Shared contact with team</p>
-                        <p className="text-sm text-gray-600">3 days ago</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 text-center">
-                    <Button gradientDuoTone="purpleToBlue" className="font-semibold">
-                      View All Activity
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        </div>
-      )}
+      {isLoggedIn ? <Dashboard /> : <StandardProcedure />}
 
       {/* Features Section */}
-      <div className="pb-8">
+      <div id="features" className="py-20 scroll-mt-20">
         <PortalReachSpecifics />
       </div>
 
@@ -308,18 +163,19 @@ const Home = () => {
         <div className="py-20 bg-gradient-to-r from-blue-600 to-purple-700">
           <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Ready to revolutionize your contact management?
+              Ready to organise your contacts?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who trust Contact Nexus for their networking needs.
+              Create a free account in under a minute. No credit card, no ads.
             </p>
-            <Button 
-              gradientDuoTone="purpleToBlue" 
+            <Button
+              gradientDuoTone="purpleToBlue"
               size="xl"
               className="font-semibold mx-auto"
+              onClick={() => navigate("/auth?mode=signup")}
             >
               <span className="flex items-center gap-2">
-                Get Started - It's Free <FaArrowRight />
+                Get Started - It’s Free <FaArrowRight />
               </span>
             </Button>
           </div>
@@ -331,6 +187,173 @@ const Home = () => {
 
 export default Home;
 
+/** Signed-in overview: live stats, quick actions and the newest contacts. */
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [stats, setStats] = useState(null);
+  const [recent, setRecent] = useState(null);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      contactStatsRoute(),
+      listContactsRoute({ page: 0, size: RECENT_COUNT, sort: "createdAt,desc" }),
+    ])
+      .then(([s, r]) => {
+        if (cancelled) return;
+        setStats(s.data);
+        setRecent(r.data.content);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setStats({ total: "—", favorites: "—", addedThisWeek: "—" });
+        setRecent([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const count = await exportAllContacts();
+      dispatch(toastActions.setToast(count
+        ? { message: `Exported ${count} contact${count === 1 ? "" : "s"}`, type: "success" }
+        : { message: "No contacts to export yet", type: "error" }));
+    } catch (err) {
+      dispatch(toastActions.setToast({
+        message: err.response?.data?.message || "Could not export contacts",
+        type: "error",
+      }));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <div className="py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Quick Stats for User */}
+        <div className="mb-16">
+          <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center">
+            Your Contact Overview
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard value={stats?.total} label="Total Contacts" gradient="from-blue-600 to-purple-600" bar="from-blue-500 to-purple-600" />
+            <StatCard value={stats?.favorites} label="Favourites" gradient="from-green-600 to-blue-600" bar="from-green-500 to-blue-600" />
+            <StatCard value={stats?.addedThisWeek} label="Added This Week" gradient="from-purple-600 to-pink-600" bar="from-purple-500 to-pink-600" />
+          </div>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className="mb-16">
+          <h3 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <ActionCard
+              icon={<FaUserPlus className="w-8 h-8 text-white" />}
+              gradient="from-blue-500 to-purple-500"
+              title="Add New Contact"
+              text="Quickly add a new contact to your network"
+              onClick={() => navigate("/contacts?new=1")}
+            />
+            <ActionCard
+              icon={<FaStar className="w-8 h-8 text-white" />}
+              gradient="from-green-500 to-emerald-500"
+              title="View Favourites"
+              text="Jump straight to the contacts you've starred"
+              onClick={() => navigate("/contacts?favorites=1")}
+            />
+            <ActionCard
+              icon={exporting ? <Spinner size="lg" /> : <FaFileExport className="w-8 h-8 text-white" />}
+              gradient="from-purple-500 to-pink-500"
+              title="Export Contacts"
+              text="Download every contact as a .vcf file for your phone or email app"
+              onClick={handleExport}
+            />
+          </div>
+        </div>
+
+        {/* Recently added */}
+        <div className="mb-4">
+          <h3 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Recently Added
+          </h3>
+          <Card className="border-0 shadow-lg">
+            <div className="p-2 sm:p-6">
+              {recent === null ? (
+                <div className="flex justify-center py-8"><Spinner size="lg" /></div>
+              ) : recent.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600 mb-4">You haven’t added any contacts yet.</p>
+                  <Button gradientDuoTone="purpleToBlue" className="mx-auto" onClick={() => navigate("/contacts?new=1")}>
+                    Add your first contact
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <ul className="space-y-3">
+                    {recent.map((c) => {
+                      const name = [c.firstName, c.lastName].filter(Boolean).join(" ") || c.email;
+                      return (
+                        <li key={c.id} className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                          <Avatar img={c.imageUrl || undefined} placeholderInitials={name.charAt(0).toUpperCase()} rounded />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-800 truncate">
+                              {name}
+                              {c.favorite && <FaStar className="inline w-3.5 h-3.5 ml-2 text-yellow-500 align-baseline" />}
+                            </p>
+                            <p className="text-sm text-gray-600 truncate">{c.email}</p>
+                          </div>
+                          <span className="text-sm text-gray-500 whitespace-nowrap">{timeAgo(c.createdAt)}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <div className="mt-6 text-center">
+                    <Button gradientDuoTone="purpleToBlue" className="font-semibold mx-auto" onClick={() => navigate("/contacts")}>
+                      View all contacts
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ value, label, gradient, bar }) => (
+  <Card className="text-center group hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
+    <div className={`text-3xl lg:text-4xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-2`}>
+      {value ?? <Spinner size="md" />}
+    </div>
+    <div className="text-lg font-semibold text-gray-600">{label}</div>
+    <div className={`w-16 h-1 bg-gradient-to-r ${bar} mx-auto mt-3 rounded-full`}></div>
+  </Card>
+);
+
+const ActionCard = ({ icon, gradient, title, text, onClick }) => (
+  <button type="button" onClick={onClick} className="text-left focus:outline-none focus:ring-4 focus:ring-purple-200 rounded-lg">
+    <Card className="h-full group hover:scale-105 transition-transform duration-300 border-0 shadow-lg cursor-pointer">
+      <div className="text-center p-6">
+        <div className={`w-16 h-16 bg-gradient-to-r ${gradient} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+        <h4 className="text-xl font-bold text-gray-800 mb-2">{title}</h4>
+        <p className="text-gray-600">{text}</p>
+      </div>
+    </Card>
+  </button>
+);
+
 const StandardProcedure = () => {
   return (
     <div className="py-20 bg-gray-50">
@@ -340,7 +363,7 @@ const StandardProcedure = () => {
             How It Works
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Get started with Contact Nexus in three simple steps and transform the way you manage your professional network.
+            Get started with Contact Nexus in three simple steps.
           </p>
         </div>
 
@@ -348,24 +371,30 @@ const StandardProcedure = () => {
           <StandardProcedureCards
             step="1"
             feature="Meet New People"
-            description="Connect with professionals at events, meetings, and social gatherings to expand your network."
+            description="Connect with people at events, meetings and gatherings."
             featureImage={MeetingDifferentPeople}
             icon={<FaUsers className="w-8 h-8" />}
           />
           <StandardProcedureCards
             step="2"
             feature="Save Contacts Instantly"
-            description="Quickly save and organize contact information with our intuitive contact management system."
+            description="Add their details in seconds, then search and star them whenever you need them."
             featureImage={SaveContacts}
             icon={<FaShieldAlt className="w-8 h-8" />}
           />
           <StandardProcedureCards
             step="3"
-            feature="Share & Collaborate"
-            description="Effortlessly share contacts with team members and build stronger professional relationships."
+            feature="Share Anywhere"
+            description="Send any contact as a vCard that every phone can import, or export your whole list."
             featureImage={ShareContact}
             icon={<FaShareAlt className="w-8 h-8" />}
           />
+        </div>
+
+        <div className="text-center mt-12">
+          <Link to="/auth?mode=signup" className="text-purple-700 font-semibold hover:underline">
+            Create your free account <FaArrowRight className="inline ml-1" />
+          </Link>
         </div>
       </div>
     </div>
@@ -377,13 +406,13 @@ const StandardProcedureCards = ({ step, feature, description, featureImage, icon
     <div className="group">
       <Card className="overflow-hidden h-full hover:scale-105 transition-transform duration-300 border-0 shadow-lg">
         <div className="relative">
-          <img 
-            src={featureImage} 
+          <img
+            src={featureImage}
             alt={feature}
             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
           />
-          <Badge 
-            color="purple" 
+          <Badge
+            color="purple"
             size="lg"
             className="absolute top-4 left-4 font-bold text-lg"
           >
@@ -414,26 +443,26 @@ const PortalReachSpecifics = () => {
           Why Choose Contact Nexus?
         </h2>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Discover the powerful features that make Contact Nexus the perfect solution for modern professionals.
+          The essentials of a contact book, done properly.
         </p>
       </div>
-      
+
       <div className="grid md:grid-cols-3 gap-8">
         <PortalReachSpecificsCard
-          title="Enterprise Security"
-          description="Bank-level encryption and secure cloud storage ensure your contacts are always protected and accessible."
+          title="Secure by Design"
+          description="Hashed passwords, short-lived sessions that rotate automatically, and private photo storage."
           icon={<FaShieldAlt className="w-12 h-12 text-blue-500 mb-4" />}
           gradientColor="blue"
         />
         <PortalReachSpecificsCard
-          title="Smart Sharing"
-          description="Share digital business cards instantly via QR codes, links, or direct contact transfer."
+          title="Share as vCard"
+          description="Send a contact card in one tap. iPhone, Android, Gmail and Outlook all import it."
           icon={<FaShareAlt className="w-12 h-12 text-purple-500 mb-4" />}
           gradientColor="purple"
         />
         <PortalReachSpecificsCard
-          title="Favorite Contacts"
-          description="Mark important contacts as favorites and access them quickly with our smart organization system."
+          title="Favourite Contacts"
+          description="Star the people you reach for most and filter to them instantly."
           icon={<FaStar className="w-12 h-12 text-yellow-500 mb-4" />}
           gradientColor="yellow"
         />
@@ -445,8 +474,8 @@ const PortalReachSpecifics = () => {
 const PortalReachSpecificsCard = ({ title, description, icon, gradientColor }) => {
   const gradientClasses = {
     blue: "hover:from-blue-50 hover:to-cyan-50",
-    purple: "hover:from-purple-50 hover:to-pink-50", 
-    yellow: "hover:from-yellow-50 hover:to-orange-50"
+    purple: "hover:from-purple-50 hover:to-pink-50",
+    yellow: "hover:from-yellow-50 hover:to-orange-50",
   };
 
   return (

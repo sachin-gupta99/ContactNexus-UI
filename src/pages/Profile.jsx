@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import ProfilePicture from "../assets/contact.jpg";
-import { Card, Button, Badge, Avatar } from "flowbite-react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Card, Button, Avatar } from "flowbite-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   FaEdit,
-  FaTrash,
+  FaShareAlt,
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
@@ -17,21 +17,64 @@ import {
   FaGamepad,
   FaUserFriends,
   FaStar,
-  FaCommentDots,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
 import { Spinner } from "flowbite-react";
 import EditProfileModal from "../components/EditProfileModal";
+import { contactStatsRoute, listContactsRoute, setFavoriteRoute } from "../api/contactApi";
+import { buildVCard, shareVCard, userToCard } from "../util/vcard";
+import { toastActions } from "../store/toast";
+
+const FAVOURITES_SHOWN = 20;
 
 const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const user = useSelector((state) => state.user?.user);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [stats, setStats] = useState(null);
+  const [favourites, setFavourites] = useState(null);
 
   useEffect(() => {
     document.title = "Profile - Contact Nexus";
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    contactStatsRoute()
+      .then((res) => !cancelled && setStats(res.data))
+      .catch(() => !cancelled && setStats({ total: "—", favorites: "—", addedThisWeek: "—" }));
+    listContactsRoute({ page: 0, size: FAVOURITES_SHOWN, favorite: true })
+      .then((res) => !cancelled && setFavourites(res.data.content))
+      .catch(() => !cancelled && setFavourites([]));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const bumpFavourites = (delta) =>
+    setStats((st) => (st && typeof st.favorites === "number" ? { ...st, favorites: st.favorites + delta } : st));
+
+  const unfavourite = async (contact) => {
+    setFavourites((list) => list.filter((c) => c.id !== contact.id));
+    bumpFavourites(-1);
+    try {
+      await setFavoriteRoute(contact.id, false);
+    } catch {
+      setFavourites((list) => [...list, contact]);
+      bumpFavourites(1);
+      dispatch(toastActions.setToast({ message: "Could not update favourite", type: "error" }));
+    }
+  };
+
+  const shareMyCard = async () => {
+    const result = await shareVCard(buildVCard(userToCard(user)), user?.name || "My card");
+    if (result === "downloaded") {
+      dispatch(toastActions.setToast({ message: "Your contact card was downloaded", type: "success" }));
+    }
+  };
 
   // Display fields live on the nested profile; only id/email/name are top-level.
   const profile = user?.profile;
@@ -44,7 +87,7 @@ const Profile = () => {
 
   const contactInformation = [
     { label: "Email", value: user?.email, icon: FaEnvelope },
-    { label: "Phone", value: profile?.phone ? "+91-" + profile.phone : null, icon: FaPhone },
+    { label: "Phone", value: profile?.phone, icon: FaPhone },
     {
       label: "Address",
       value: [profile?.street, profile?.area, profile?.city, profile?.state]
@@ -134,24 +177,9 @@ const Profile = () => {
 
                     {/* Stats Row */}
                     <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="text-center p-4 bg-white/80 rounded-lg border border-gray-200 shadow-sm">
-                        <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          12
-                        </div>
-                        <div className="text-sm text-gray-600">Contacts</div>
-                      </div>
-                      <div className="text-center p-4 bg-white/80 rounded-lg border border-gray-200 shadow-sm">
-                        <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                          5
-                        </div>
-                        <div className="text-sm text-gray-600">Favorites</div>
-                      </div>
-                      <div className="text-center p-4 bg-white/80 rounded-lg border border-gray-200 shadow-sm">
-                        <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                          8
-                        </div>
-                        <div className="text-sm text-gray-600">Groups</div>
-                      </div>
+                      <MiniStat value={stats?.total} label="Contacts" gradient="from-blue-600 to-purple-600" />
+                      <MiniStat value={stats?.favorites} label="Favourites" gradient="from-purple-600 to-pink-600" />
+                      <MiniStat value={stats?.addedThisWeek} label="This week" gradient="from-green-600 to-emerald-600" />
                     </div>
 
                     {/* Action Buttons */}
@@ -167,6 +195,7 @@ const Profile = () => {
                       <Button
                         gradientDuoTone="purpleToBlue"
                         className="flex-1 font-semibold py-3"
+                        onClick={() => navigate("/contacts")}
                       >
                         <FaUserFriends className="w-4 h-4 mr-2" />
                         View Contacts
@@ -174,8 +203,10 @@ const Profile = () => {
                       <Button
                         gradientDuoTone="pinkToOrange"
                         className="sm:w-auto font-semibold py-3"
+                        onClick={shareMyCard}
                       >
-                        <FaTrash className="w-4 h-4" />
+                        <FaShareAlt className="w-4 h-4 mr-2" />
+                        Share my card
                       </Button>
                     </div>
                   </div>
@@ -223,7 +254,7 @@ const Profile = () => {
                         onClick={() => {
                           const carousel =
                             document.getElementById("contacts-carousel");
-                          carousel.scrollBy({ left: -280, behavior: "smooth" });
+                          carousel?.scrollBy({ left: -280, behavior: "smooth" });
                         }}
                       >
                         <FaChevronLeft className="w-3 h-3 text-gray-600" />
@@ -234,13 +265,13 @@ const Profile = () => {
                         onClick={() => {
                           const carousel =
                             document.getElementById("contacts-carousel");
-                          carousel.scrollBy({ left: 280, behavior: "smooth" });
+                          carousel?.scrollBy({ left: 280, behavior: "smooth" });
                         }}
                       >
                         <FaChevronRight className="w-3 h-3 text-gray-600" />
                       </button>
 
-                      <Link to="/contacts">
+                      <Link to="/contacts?favorites=1">
                         <Button
                           gradientDuoTone="cyanToBlue"
                           size="sm"
@@ -254,56 +285,26 @@ const Profile = () => {
                   <div className="h-1 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
                 </div>
 
-                {/* Carousel Container - Clean without overlapping buttons */}
-                <div className="space-y-4">
+                {favourites === null ? (
+                  <div className="flex justify-center py-6"><Spinner /></div>
+                ) : favourites.length === 0 ? (
+                  <p className="text-gray-600 text-sm py-4">
+                    No favourites yet. Tap the star on any contact in{" "}
+                    <Link to="/contacts" className="text-blue-600 font-semibold hover:underline">Contacts</Link>{" "}
+                    to pin it here.
+                  </p>
+                ) : (
                   <div
                     id="contacts-carousel"
                     className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth pb-2"
                   >
-                    <div className="flex-shrink-0 w-64">
-                      <FavouriteContact
-                        name="Sachin Gupta"
-                        image={ProfilePicture}
-                        work="Software Engineer"
-                      />
-                    </div>
-                    <div className="flex-shrink-0 w-64">
-                      <FavouriteContact
-                        name="John Doe"
-                        image={ProfilePicture}
-                        work="Product Manager"
-                      />
-                    </div>
-                    <div className="flex-shrink-0 w-64">
-                      <FavouriteContact
-                        name="Jane Smith"
-                        image={ProfilePicture}
-                        work="UX Designer"
-                      />
-                    </div>
-                    <div className="flex-shrink-0 w-64">
-                      <FavouriteContact
-                        name="Mike Johnson"
-                        image={ProfilePicture}
-                        work="Data Scientist"
-                      />
-                    </div>
-                    <div className="flex-shrink-0 w-64">
-                      <FavouriteContact
-                        name="Sarah Wilson"
-                        image={ProfilePicture}
-                        work="Marketing Manager"
-                      />
-                    </div>
-                    <div className="flex-shrink-0 w-64">
-                      <FavouriteContact
-                        name="Alex Chen"
-                        image={ProfilePicture}
-                        work="DevOps Engineer"
-                      />
-                    </div>
+                    {favourites.map((c) => (
+                      <div key={c.id} className="flex-shrink-0 w-64">
+                        <FavouriteContact contact={c} onUnfavourite={() => unfavourite(c)} />
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </Card>
             </div>
           </div>
@@ -362,53 +363,63 @@ const DetailsCardValue = ({ label, value, icon: Icon }) => {
   );
 };
 
-const FavouriteContact = ({ name, image, work }) => {
+const MiniStat = ({ value, label, gradient }) => (
+  <div className="text-center p-4 bg-white/80 rounded-lg border border-gray-200 shadow-sm">
+    <div className={`text-2xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+      {value ?? <Spinner size="sm" />}
+    </div>
+    <div className="text-sm text-gray-600">{label}</div>
+  </div>
+);
+
+const quickAction = "flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200";
+
+const FavouriteContact = ({ contact, onUnfavourite }) => {
+  const name = [contact.firstName, contact.lastName].filter(Boolean).join(" ") || contact.email;
   return (
     <div className="group relative overflow-hidden">
-      {/* Main Card */}
       <div className="relative bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30 rounded-2xl p-4 border border-gray-200/60 hover:border-blue-300/60 transition-all duration-300 hover:shadow-lg backdrop-blur-sm">
-        {/* Header Row with Avatar and Favorite Star */}
         <div className="flex items-start justify-between mb-3">
-          <div className="relative">
-            <Avatar
-              img={image}
-              size="md"
-              className="ring-2 ring-white shadow-md group-hover:ring-blue-200 transition-all duration-300"
-            />
-            {/* Online Status */}
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
-          </div>
-
-          {/* Favorite Star Icon - Only activates on direct hover */}
-          <button className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-yellow-100 hover:to-orange-100 rounded-full border border-gray-200 hover:border-yellow-300 transition-all duration-300 cursor-pointer">
-            <FaStar className="w-3.5 h-3.5 text-gray-400 hover:text-yellow-500 transition-colors duration-300" />
+          <Avatar
+            img={contact.imageUrl || undefined}
+            placeholderInitials={name.charAt(0).toUpperCase()}
+            rounded
+            size="md"
+            className="ring-2 ring-white shadow-md group-hover:ring-blue-200 transition-all duration-300"
+          />
+          <button
+            type="button"
+            onClick={onUnfavourite}
+            aria-label={`Remove ${name} from favourites`}
+            title="Remove from favourites"
+            className="flex items-center justify-center w-8 h-8 bg-yellow-50 hover:bg-gray-100 rounded-full border border-yellow-300 transition-all duration-300"
+          >
+            <FaStar className="w-3.5 h-3.5 text-yellow-500" />
           </button>
         </div>
 
-        {/* Contact Information */}
         <div className="space-y-1">
-          <h4 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-blue-700 transition-colors duration-300">
+          <h4 className="font-semibold text-gray-900 text-sm leading-tight truncate group-hover:text-blue-700 transition-colors duration-300">
             {name}
           </h4>
-          <p className="text-xs text-gray-600 font-medium">{work}</p>
+          <p className="text-xs text-gray-600 font-medium truncate">{contact.bio || contact.email}</p>
         </div>
 
-        {/* Quick Action Buttons */}
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-          <button className="flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors duration-200 group">
-            <FaPhone className="w-3.5 h-3.5 text-blue-600" />
-          </button>
-
-          <button className="flex items-center justify-center w-8 h-8 bg-green-100 hover:bg-green-200 rounded-lg transition-colors duration-200 group">
-            <FaCommentDots className="w-3.5 h-3.5 text-green-600" />
-          </button>
-
-          <button className="flex items-center justify-center w-8 h-8 bg-purple-100 hover:bg-purple-200 rounded-lg transition-colors duration-200 group">
+        <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100">
+          {contact.phone ? (
+            <a href={`tel:${contact.phone}`} aria-label={`Call ${name}`} className={`${quickAction} bg-blue-100 hover:bg-blue-200`}>
+              <FaPhone className="w-3.5 h-3.5 text-blue-600" />
+            </a>
+          ) : (
+            <span aria-hidden className={`${quickAction} bg-gray-100 opacity-50 cursor-not-allowed`}>
+              <FaPhone className="w-3.5 h-3.5 text-gray-400" />
+            </span>
+          )}
+          <a href={`mailto:${contact.email}`} aria-label={`Email ${name}`} className={`${quickAction} bg-purple-100 hover:bg-purple-200`}>
             <FaEnvelope className="w-3.5 h-3.5 text-purple-600" />
-          </button>
+          </a>
         </div>
 
-        {/* Hover Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out pointer-events-none"></div>
       </div>
     </div>
