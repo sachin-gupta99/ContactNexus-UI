@@ -4,7 +4,7 @@ import { RiLockPasswordFill } from "react-icons/ri";
 import { Button, Label, TextInput } from "flowbite-react";
 import { loginRoute } from "../api/authApi";
 import { setAccessToken } from "../util/tokenStore";
-import { router } from "../App";
+import { router } from "../router";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
 import { userActions } from "../store/user";

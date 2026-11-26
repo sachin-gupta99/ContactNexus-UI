@@ -1,4 +1,3 @@
-import React from "react";
 import {
   FaPhone, FaEnvelope, FaStar, FaRegStar, FaShare,
   FaPencilAlt, FaTrash,

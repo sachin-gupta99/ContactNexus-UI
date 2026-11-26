@@ -5,7 +5,7 @@ import { Button, Label, TextInput } from "flowbite-react";
 import { useDispatch } from "react-redux";
 import { resetPasswordRoute } from "../api/authApi";
 import { toastActions } from "../store/toast";
-import { router } from "../App";
+import { router } from "../router";
 
 const ResetPasswordForm = () => {
   const [params] = useSearchParams();

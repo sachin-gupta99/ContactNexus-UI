@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import SignInForm from "../components/SignInForm";
 import SimpleSignUpForm from "../components/SimpleSignUpForm";
 import ForgotPasswordForm from "../components/ForgotPasswordForm";
 import ResetPasswordForm from "../components/ResetPasswordForm";
-import { router } from "../App";
+import { router } from "../router";
 
 const VALID_MODES = ["signin", "signup", "forgot", "reset"];
 
@@ -92,7 +92,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
-export const AuthLoader = () => {
-  return import("./Auth");
-};

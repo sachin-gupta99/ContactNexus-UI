@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
@@ -89,5 +89,7 @@ const ImagePicker = forwardRef(({ label, name, initialImage }, ref) => {
     </div>
   );
 });
+
+ImagePicker.displayName = "ImagePicker";
 
 export default ImagePicker;

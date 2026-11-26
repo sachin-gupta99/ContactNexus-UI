@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { router } from "../App";
+import { router } from "../router";
 
 const ProtectedRoute = ({ children }) => {
   const { user, authReady } = useSelector((state) => state.user);
