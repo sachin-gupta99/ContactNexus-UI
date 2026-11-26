@@ -16,7 +16,7 @@ import { timeAgo } from "../util/time";
 import { toastActions } from "../store/toast";
 
 const RECENT_COUNT = 5;
-const FAILED_STATS = { total: "—", favorites: "—", addedThisWeek: "—" };
+const FAILED_STATS = { total: "—", favorites: "—", addedThisWeek: "—", tags: "—" };
 
 const scrollToFeatures = () =>
   document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
@@ -214,10 +214,11 @@ const Dashboard = () => {
           <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center">
             Your Contact Overview
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <StatCard value={stats?.total} label="Total Contacts" gradient="from-blue-600 to-purple-600" bar="from-blue-500 to-purple-600" />
             <StatCard value={stats?.favorites} label="Favourites" gradient="from-green-600 to-blue-600" bar="from-green-500 to-blue-600" />
             <StatCard value={stats?.addedThisWeek} label="Added This Week" gradient="from-purple-600 to-pink-600" bar="from-purple-500 to-pink-600" />
+            <StatCard value={stats?.tags} label="Groups (tags)" gradient="from-orange-600 to-red-600" bar="from-orange-500 to-red-600" />
           </div>
         </div>
 

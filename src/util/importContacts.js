@@ -113,6 +113,7 @@ const cardToContact = (props) => {
   let phone;
   let phonePreferred = false;
   let title;
+  const tags = [];
   let note;
 
   for (const { name, params, value } of props) {
@@ -147,6 +148,9 @@ const cardToContact = (props) => {
       case "NOTE":
         note ??= unescapeValue(value);
         break;
+      case "CATEGORIES":
+        tags.push(...splitStructured(value, ","));
+        break;
       case "TITLE":
         title ??= unescapeValue(value);
         break;
@@ -168,6 +172,7 @@ const cardToContact = (props) => {
   c.email = email;
   c.phone = phone;
   c.bio = note || title;
+  c.tags = tags;
   return c;
 };
 
@@ -257,6 +262,10 @@ export const parseCsv = (text) => {
     const i = aliases.map((a) => keys.indexOf(a)).find((x) => x >= 0);
     if (i !== undefined) index[field] = i;
   }
+  // Google: "Labels" (newer) or "Group Membership" (older), values joined by
+  // " ::: ", with system labels such as "* myContacts" that aren't real groups.
+  const labelCol = ["labels", "groupmembership", "categories", "tags", "groups"]
+    .map((a) => keys.indexOf(a)).find((i) => i >= 0);
   const urlCols = keys.map((k, i) => (/(website|webpage|url|linkedin|github|instagram)/.test(k) ? i : -1)).filter((i) => i >= 0);
 
   return rows.map((r) => {
@@ -274,6 +283,9 @@ export const parseCsv = (text) => {
       c.lastName ||= rest.join(" ");
     }
     urlCols.forEach((i) => r[i] && classifyUrl(r[i].trim(), c));
+    c.tags = labelCol === undefined || !r[labelCol]
+      ? []
+      : r[labelCol].split(/\s*(?::::|;)\s*/).filter((t) => t && !t.startsWith("*"));
     return c;
   });
 };
@@ -284,6 +296,19 @@ const FIELDS = [
   "firstName", "lastName", "email", "phone", "bio", "street", "city",
   "state", "country", "zipCode", "githubUrl", "linkedinUrl", "instagramUrl",
 ];
+
+export const MAX_TAGS = 10;
+export const MAX_TAG_LENGTH = 30;
+
+/** Same rules as the server: trimmed, single spaces, unique ignoring case, at most 10 of 30 chars. */
+export const cleanTags = (raw) => {
+  const seen = new Map();
+  for (const t of raw || []) {
+    const clean = String(t ?? "").trim().replace(/\s+/g, " ").slice(0, MAX_TAG_LENGTH).trim();
+    if (clean && !seen.has(clean.toLowerCase())) seen.set(clean.toLowerCase(), clean);
+  }
+  return [...seen.values()].slice(0, MAX_TAGS);
+};
 
 /**
  * Cleans parsed rows into server-ready payloads and separates out the ones
@@ -303,6 +328,8 @@ export const prepareContacts = (parsed) => {
     // The server requires a first name; fall back to the email's local part.
     if (!c.firstName && c.email) c.firstName = clip(c.email.split("@")[0], "firstName");
 
+    c.tags = cleanTags(raw.tags);
+    if (!c.tags.length) delete c.tags;
     const label = [c.firstName, c.lastName].filter(Boolean).join(" ") || c.email || `Row ${i + 1}`;
     if (!c.email) invalid.push({ row: i + 1, label, reason: "No email address" });
     else if (!EMAIL_RE.test(c.email)) invalid.push({ row: i + 1, label, reason: `Invalid email "${c.email}"` });
