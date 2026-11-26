@@ -40,3 +40,23 @@ export const changePasswordRoute = (currentPassword, newPassword) => {
 export const logoutAllRoute = () => {
   return axiosInstance.post("/api/v1/auth/logout-all");
 };
+
+// Spends the emailed token; on success returns { accessToken, user } and sets
+// the refresh cookie, i.e. it signs the user in. 400 if invalid / expired / used.
+export const verifyEmailRoute = (token) => {
+  return axiosInstance.post("/api/v1/auth/verify-email", { token });
+};
+
+// Always 200 (enumeration-safe); only sends if the address has an unverified account.
+export const resendVerificationRoute = (email) => {
+  return axiosInstance.post("/api/v1/auth/resend-verification", { email });
+};
+
+// [{ id, userAgent, ipAddress, signedInAt, lastActiveAt, expiresAt, current }]
+export const listSessionsRoute = () => {
+  return axiosInstance.get("/api/v1/auth/sessions");
+};
+
+export const revokeSessionRoute = (id) => {
+  return axiosInstance.delete(`/api/v1/auth/sessions/${id}`);
+};

@@ -12,23 +12,11 @@ import {
 import { Button, Card, Badge, Spinner, Avatar } from "flowbite-react";
 import { useContactList, useContactStats } from "../hooks/useContacts";
 import { exportAllContacts } from "../util/exportContacts";
+import { timeAgo } from "../util/time";
 import { toastActions } from "../store/toast";
 
 const RECENT_COUNT = 5;
 const FAILED_STATS = { total: "—", favorites: "—", addedThisWeek: "—" };
-
-const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-const STEPS = [
-  ["year", 31_536_000], ["month", 2_592_000], ["week", 604_800],
-  ["day", 86_400], ["hour", 3_600], ["minute", 60],
-];
-const timeAgo = (iso) => {
-  const seconds = (new Date(iso).getTime() - Date.now()) / 1000;
-  for (const [unit, size] of STEPS) {
-    if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
-  }
-  return "just now";
-};
 
 const scrollToFeatures = () =>
   document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });

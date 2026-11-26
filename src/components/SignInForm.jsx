@@ -15,6 +15,7 @@ const SignInForm = () => {
   const passwordRef = useRef();
   const dispatch = useDispatch();
   const [submitting, setSubmitting] = useState(false);
+  const [locked, setLocked] = useState(null); // server message while the account is locked
   const slow = useSlowHint(submitting);
 
   const handleSubmit = async (e) => {
@@ -22,6 +23,7 @@ const SignInForm = () => {
       e.preventDefault();
       if (submitting) return;
       setSubmitting(true);
+      setLocked(null);
 
       const email = emailRef.current.value;
       const password = passwordRef.current.value;
@@ -48,10 +50,20 @@ const SignInForm = () => {
         );
       }
     } catch (error) {
+      const data = error.response?.data;
+      if (data?.code === "EMAIL_NOT_VERIFIED") {
+        const email = emailRef.current?.value?.trim() || "";
+        router.navigate(`/auth?mode=check-email&reason=unverified&email=${encodeURIComponent(email)}`);
+        return;
+      }
+      if (data?.code === "ACCOUNT_LOCKED") {
+        setLocked(data.message);
+        return;
+      }
       // Prefer the server's own message so 429 ("Too many requests. Try again
       // in N seconds.") and other explicit errors reach the user. Falls back
       // to the generic one only when the server didn't send a body.
-      const message = error.response?.data?.message || "Invalid credentials";
+      const message = data?.message || "Invalid credentials";
       dispatch(toastActions.setToast({ message, type: "error" }));
     } finally {
       setSubmitting(false);
@@ -108,6 +120,19 @@ const SignInForm = () => {
             Forgot your password?
           </button>
         </div>
+
+        {locked && (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <p>{locked}</p>
+            <button
+              type="button"
+              onClick={() => router.navigate("/auth?mode=forgot")}
+              className="mt-1 font-semibold underline"
+            >
+              Reset password now
+            </button>
+          </div>
+        )}
 
         <Button
           type="submit"
