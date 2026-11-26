@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pagination, TextInput, Button, Badge, Spinner } from "flowbite-react";
-import { FaSearch, FaPlus, FaUserFriends, FaStar, FaFileExport } from "react-icons/fa";
+import { FaSearch, FaPlus, FaUserFriends, FaStar, FaFileExport, FaFileImport } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import ContactCard from "../components/ContactCard";
 import ContactFormModal from "../components/ContactFormModal";
 import ConfirmModal from "../components/ConfirmModal";
+import ImportContactsModal from "../components/ImportContactsModal";
 import { listContactsRoute, deleteContactRoute, setFavoriteRoute } from "../api/contactApi";
 import { buildVCard, contactToCard, shareVCard } from "../util/vcard";
 import { exportAllContacts } from "../util/exportContacts";
@@ -34,6 +35,7 @@ const Contacts = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);     // contact to delete, or null
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const dispatch = useDispatch();
   const toast = (message, type = "success") => dispatch(toastActions.setToast({ message, type }));
@@ -178,6 +180,15 @@ const Contacts = () => {
     }
   };
 
+  const handleImported = ({ imported, skippedDuplicates, invalid = 0, partial }) => {
+    const parts = [`Imported ${imported} contact${imported === 1 ? "" : "s"}`];
+    if (skippedDuplicates) parts.push(`${skippedDuplicates} already existed`);
+    if (invalid) parts.push(`${invalid} had no valid email`);
+    if (!partial) toast(parts.join(" · "));
+    setUiPage(1);
+    setRefreshKey((k) => k + 1);
+  };
+
   const contacts = page.content || [];
 
   return (
@@ -199,6 +210,10 @@ const Contacts = () => {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <Button color="light" className="w-fit font-semibold" onClick={() => setImportOpen(true)}>
+                <FaFileImport className="w-4 h-4 mr-2" />
+                Import
+              </Button>
               <Button
                 color="light"
                 className="w-fit font-semibold"
@@ -296,10 +311,15 @@ const Contacts = () => {
                   : "Get started by adding your first contact."}
             </p>
             {!debouncedQ && !favoritesOnly && (
-              <Button gradientDuoTone="purpleToBlue" className="font-semibold mx-auto" onClick={openCreate}>
-                <FaPlus className="w-4 h-4 mr-2" />
-                Add your first contact
-              </Button>
+              <div className="flex flex-col items-center gap-3">
+                <Button gradientDuoTone="purpleToBlue" className="font-semibold" onClick={openCreate}>
+                  <FaPlus className="w-4 h-4 mr-2" />
+                  Add your first contact
+                </Button>
+                <button type="button" onClick={() => setImportOpen(true)} className="text-purple-700 font-medium hover:underline">
+                  or import from a .vcf / .csv file
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -323,6 +343,12 @@ const Contacts = () => {
         onClose={closeForm}
         onSaved={handleSaved}
         initialContact={editTarget}
+      />
+
+      <ImportContactsModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={handleImported}
       />
 
       <ConfirmModal
