@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
-import { Pagination, TextInput, Button, Badge, Spinner } from "flowbite-react";
-import { FaSearch, FaPlus, FaUserFriends, FaStar, FaFileExport, FaFileImport } from "react-icons/fa";
+import { Pagination, TextInput, Button, Badge, Spinner, Select } from "flowbite-react";
+import { FaSearch, FaPlus, FaUserFriends, FaStar, FaFileExport, FaFileImport, FaTag, FaClone } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import ContactCard from "../components/ContactCard";
 import ContactFormModal from "../components/ContactFormModal";
 import ConfirmModal from "../components/ConfirmModal";
 import ImportContactsModal from "../components/ImportContactsModal";
-import { useContactList, useDeleteContact, useToggleFavorite } from "../hooks/useContacts";
+import DuplicatesModal from "../components/DuplicatesModal";
+import {
+  useContactList, useContactTags, useDeleteContact, useDeleteTag, useDuplicates, useToggleFavorite,
+} from "../hooks/useContacts";
 import { buildVCard, contactToCard, shareVCard } from "../util/vcard";
 import { exportAllContacts } from "../util/exportContacts";
 import { useDispatch } from "react-redux";
@@ -15,6 +18,14 @@ import { toastActions } from "../store/toast";
 const PAGE_SIZE = 12;
 const SEARCH_DEBOUNCE_MS = 300;
 const EMPTY_PAGE = { content: [], totalElements: 0, totalPages: 0 };
+
+// URL value -> API sort. "favourites" sorts starred contacts first, then by name.
+const SORTS = {
+  name: { label: "Name (A–Z)", sort: "firstName,asc" },
+  "name-desc": { label: "Name (Z–A)", sort: "firstName,desc" },
+  recent: { label: "Recently added", sort: "createdAt,desc" },
+  favourites: { label: "Favourites first", sort: ["favorite,desc", "firstName,asc"] },
+};
 
 const displayName = (c) => [c.firstName, c.lastName].filter(Boolean).join(" ") || c.email;
 
@@ -29,6 +40,8 @@ const Contacts = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);     // contact to delete, or null
   const [exporting, setExporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [duplicatesOpen, setDuplicatesOpen] = useState(false);
+  const [tagToDelete, setTagToDelete] = useState(null);
 
   const dispatch = useDispatch();
   const toast = (message, type = "success") => dispatch(toastActions.setToast({ message, type }));
@@ -37,6 +50,8 @@ const Contacts = () => {
   // opens the create form once and is then removed from the URL.
   const [searchParams, setSearchParams] = useSearchParams();
   const favoritesOnly = searchParams.get("favorites") === "1";
+  const tagFilter = searchParams.get("tag") || "";
+  const sortKey = SORTS[searchParams.get("sort")] ? searchParams.get("sort") : "name";
 
   // The query key includes every parameter, so a newer search can't be
   // overwritten by a slow older response (what reqIdRef used to guard against).
@@ -45,7 +60,12 @@ const Contacts = () => {
     page: uiPage - 1,
     size: PAGE_SIZE,
     favorite: favoritesOnly,
+    tag: tagFilter,
+    sort: SORTS[sortKey].sort,
   });
+  const tagsQuery = useContactTags();
+  const duplicates = useDuplicates().data ?? [];
+  const deleteTag = useDeleteTag();
   const page = listQuery.data ?? EMPTY_PAGE;
   const contacts = page.content;
 
@@ -73,12 +93,29 @@ const Contacts = () => {
     }
   }, [listQuery.data, listQuery.isPlaceholderData, page.totalPages, uiPage]);
 
-  const setFilter = (favorites) => {
+  // Filters and sort live in the URL so they survive reloads and can be shared.
+  const setParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
-    if (favorites) next.set("favorites", "1");
-    else next.delete("favorites");
+    if (value) next.set(key, value);
+    else next.delete(key);
     setSearchParams(next, { replace: true });
     setUiPage(1);
+  };
+  const setFilter = (favorites) => setParam("favorites", favorites ? "1" : "");
+  const setTagFilter = (tag) => setParam("tag", tag === tagFilter ? "" : tag);
+
+  const confirmDeleteTag = () => {
+    deleteTag.mutate(tagToDelete, {
+      onSuccess: () => {
+        toast(`Removed the "${tagToDelete}" tag from all contacts`);
+        if (tagFilter.toLowerCase() === tagToDelete.toLowerCase()) setParam("tag", "");
+        setTagToDelete(null);
+      },
+      onError: (err) => {
+        toast(err.response?.data?.message || "Could not delete the tag", "error");
+        setTagToDelete(null);
+      },
+    });
   };
 
   // Debounce search input so we don't hammer the API on every keystroke.
@@ -138,7 +175,7 @@ const Contacts = () => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const count = await exportAllContacts();
+      const count = await exportAllContacts({ tag: tagFilter });
       if (count) toast(`Exported ${count} contact${count === 1 ? "" : "s"}`);
       else toast("No contacts to export yet", "error");
     } catch (err) {
@@ -187,7 +224,7 @@ const Contacts = () => {
                 disabled={exporting}
               >
                 <FaFileExport className="w-4 h-4 mr-2" />
-                Export .vcf
+                {tagFilter ? `Export “${tagFilter}”` : "Export .vcf"}
               </Button>
               <Button
                 gradientDuoTone="purpleToBlue"
@@ -223,6 +260,17 @@ const Contacts = () => {
               </button>
             ))}
           </div>
+          <Select
+            id="sort"
+            aria-label="Sort contacts"
+            value={sortKey}
+            onChange={(e) => setParam("sort", e.target.value === "name" ? "" : e.target.value)}
+            className="sm:w-48 shrink-0"
+          >
+            {Object.entries(SORTS).map(([key, { label }]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </Select>
           <TextInput
             id="search"
             type="text"
@@ -233,6 +281,47 @@ const Contacts = () => {
             className="w-full sm:flex-1"
           />
         </div>
+
+        {/* Tags */}
+        {tagsQuery.data?.length > 0 && (
+          <div className="-mt-4 mb-6 flex flex-wrap items-center gap-2" aria-label="Filter by tag">
+            <FaTag className="w-3.5 h-3.5 text-gray-400" aria-hidden />
+            {tagsQuery.data.map((t) => {
+              const active = t.name.toLowerCase() === tagFilter.toLowerCase();
+              return (
+                <button
+                  key={t.name}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setTagFilter(t.name)}
+                  className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
+                    active ? "bg-purple-700 text-white" : "bg-white text-purple-800 border border-purple-200 hover:bg-purple-50"
+                  }`}
+                >
+                  {t.name} <span className={active ? "text-purple-200" : "text-purple-400"}>{t.count}</span>
+                </button>
+              );
+            })}
+            {tagFilter && (
+              <button type="button" onClick={() => setTagToDelete(tagFilter)} className="text-sm text-red-600 hover:underline ml-1">
+                Delete this tag
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Duplicates */}
+        {duplicates.length > 0 && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4" role="status">
+            <FaClone className="w-5 h-5 text-yellow-600 shrink-0" aria-hidden />
+            <p className="flex-1 text-sm text-yellow-900">
+              {duplicates.length === 1
+                ? "1 set of contacts looks like the same person (same email or phone)."
+                : `${duplicates.length} sets of contacts look like the same person (same email or phone).`}
+            </p>
+            <Button size="sm" color="warning" onClick={() => setDuplicatesOpen(true)}>Review</Button>
+          </div>
+        )}
 
         {/* Grid */}
         {listQuery.isPending ? (
@@ -271,6 +360,8 @@ const Contacts = () => {
                 onShare={() => shareContact(c)}
                 onEdit={() => openEdit(c)}
                 onDelete={() => setDeleteTarget(c)}
+                tags={c.tags}
+                onTagClick={setTagFilter}
               />
             ))}
           </div>
@@ -324,6 +415,24 @@ const Contacts = () => {
         onClose={closeForm}
         onSaved={handleSaved}
         initialContact={editTarget}
+      />
+
+      <DuplicatesModal
+        isOpen={duplicatesOpen}
+        onClose={() => setDuplicatesOpen(false)}
+        groups={duplicates}
+        onEdit={(c) => { setDuplicatesOpen(false); openEdit(c); }}
+        onDelete={(c) => { setDuplicatesOpen(false); setDeleteTarget(c); }}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(tagToDelete)}
+        onClose={() => !deleteTag.isPending && setTagToDelete(null)}
+        onConfirm={confirmDeleteTag}
+        title={`Delete the "${tagToDelete}" tag?`}
+        message="It will be removed from every contact. The contacts themselves stay."
+        confirmLabel="Delete tag"
+        busy={deleteTag.isPending}
       />
 
       <ImportContactsModal

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Modal, Button, Label, TextInput, Textarea } from "flowbite-react";
 import { useDispatch } from "react-redux";
 import {
@@ -7,7 +7,9 @@ import {
 } from "react-icons/fa";
 import { BiWorld } from "react-icons/bi";
 import { TbMapPinCode } from "react-icons/tb";
-import { useSaveContact } from "../hooks/useContacts";
+import { useContactTags, useSaveContact } from "../hooks/useContacts";
+import TagInput from "./TagInput";
+import ImagePicker from "./ImagePicker";
 import { toastActions } from "../store/toast";
 
 const EMPTY = {
@@ -24,14 +26,30 @@ const EMPTY = {
 const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
   const dispatch = useDispatch();
   const [form, setForm] = useState(EMPTY);
+  const [tags, setTags] = useState([]);
+  const [removePhoto, setRemovePhoto] = useState(false);
+  const [pickerKey, setPickerKey] = useState(0); // remounts the picker to clear its preview
+  const photoRef = useRef(null);
   const saveContact = useSaveContact();
+  const tagOptions = useContactTags().data?.map((t) => t.name) ?? [];
   const submitting = saveContact.isPending;
   const isEdit = Boolean(initialContact?.id);
+  const hasPhoto = Boolean(initialContact?.hasPhoto) && !removePhoto;
 
-  // Reset / prefill whenever the modal opens or the subject changes.
+  // Reset / prefill whenever the modal opens or the subject changes. Only the
+  // editable fields are copied, so server-only ones (id, favorite, timestamps,
+  // the presigned photo URL) are never sent back.
   useEffect(() => {
     if (!isOpen) return;
-    setForm(initialContact ? { ...EMPTY, ...initialContact } : EMPTY);
+    const prefill = { ...EMPTY };
+    if (initialContact) {
+      for (const key of Object.keys(EMPTY)) prefill[key] = initialContact[key] ?? "";
+      if (initialContact.hasPhoto) prefill.imageUrl = "";
+    }
+    setForm(prefill);
+    setTags(initialContact?.tags ?? []);
+    setRemovePhoto(false);
+    setPickerKey((k) => k + 1);
   }, [isOpen, initialContact]);
 
   const bind = (field) => ({
@@ -57,9 +75,20 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
       Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])
     );
 
+    payload.tags = tags;
+    const photo = photoRef.current?.files?.[0] || null;
+
     try {
-      await saveContact.mutateAsync({ id: isEdit ? initialContact.id : null, payload });
-      dispatch(toastActions.setToast({ message: isEdit ? "Contact updated" : "Contact created", type: "success" }));
+      const { photoFailed } = await saveContact.mutateAsync({
+        id: isEdit ? initialContact.id : null,
+        payload,
+        photo,
+        removePhoto: removePhoto && !photo,
+      });
+      const saved = isEdit ? "Contact updated" : "Contact created";
+      dispatch(toastActions.setToast(photoFailed
+        ? { message: `${saved}, but the photo could not be saved`, type: "error" }
+        : { message: saved, type: "success" }));
       onSaved?.();
       onClose?.();
     } catch (err) {
@@ -123,9 +152,35 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
                 <Textarea id="bio" rows={3} className="resize-none" {...bind("bio")} />
               </div>
               <div>
-                <Label htmlFor="imageUrl" value="Avatar URL" className="text-gray-700" />
-                <TextInput id="imageUrl" type="url" placeholder="https://..." {...bind("imageUrl")} />
+                <Label htmlFor="tags" value="Tags" className="text-gray-700" />
+                <TagInput id="tags" value={tags} onChange={setTags} suggestions={tagOptions} />
               </div>
+            </section>
+
+            {/* Photo */}
+            <section className="space-y-4">
+              <h3 className="text-sm font-semibold text-blue-600 border-b border-gray-200 pb-2 uppercase tracking-wider">
+                Photo
+              </h3>
+              <ImagePicker
+                key={pickerKey}
+                ref={photoRef}
+                label="Upload a photo (PNG, JPEG or GIF, up to 5MB)"
+                name="contactPhoto"
+                initialImage={hasPhoto ? initialContact.imageUrl : form.imageUrl || null}
+              />
+              {initialContact?.hasPhoto && (
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={removePhoto} onChange={(e) => setRemovePhoto(e.target.checked)} />
+                  Remove the current photo
+                </label>
+              )}
+              {!hasPhoto && (
+                <div>
+                  <Label htmlFor="imageUrl" value="Or link to an image" className="text-gray-700" />
+                  <TextInput id="imageUrl" type="url" placeholder="https://..." {...bind("imageUrl")} />
+                </div>
+              )}
             </section>
 
             {/* Address */}
