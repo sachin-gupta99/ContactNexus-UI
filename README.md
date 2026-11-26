@@ -42,6 +42,7 @@ The UI never writes to `localStorage` for auth state. Instead:
 - The **refresh token** lives in an HttpOnly cookie set by the server. JavaScript can't read it.
 - When any API call returns `401`, the axios response interceptor (`src/api/axiosInstance.js`) silently hits `/api/v1/auth/refresh`, gets a new access token, and retries the original request. A single-flight guard coalesces parallel 401s so only one `/refresh` ever fires at a time.
 - On page reload, `RootLayout` calls `/refresh` once at boot to swap the refresh cookie for a fresh access token and rehydrate the current user.
+- Signing out (menu, "sign out everywhere", account deletion) goes through `util/session.js`, which also clears the TanStack Query cache. Cache keys include the user id, so one account's cached contacts can never be shown to another.
 - Password reset links land on `/auth?mode=reset&token=…`; a successful reset revokes every refresh-token family on the server, so all other open tabs 401 on their next request.
 
 See [ContactNexus-Service's refresh-token design](https://github.com/sachin-gupta99/ContactNexus-Service#authentication) for the server side.
@@ -89,7 +90,8 @@ CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs `npm install`, 
 ## Tech stack
 
 - **React 18** + **Vite 5** + **React Router 6**
-- **Redux Toolkit** for `user` + `toast` slices
+- **TanStack Query v5** for server state: contact lists, stats, and every write (optimistic favourite toggle with rollback; writes invalidate lists + stats so all pages stay in sync)
+- **Redux Toolkit** for client state: `user` + `toast` slices
 - **Tailwind CSS 3** + **flowbite-react** for form primitives
 - **Axios** with request/response interceptors for auth
 - **react-icons**, **react-spinners**, **prop-types**, **jwt-decode**
@@ -103,6 +105,7 @@ src/
   main.jsx                      # ReactDOM + Redux Provider
   api/
     axiosInstance.js            # bearer header + single-flight 401 refresh
+    queryClient.js              # TanStack Query defaults (30s staleTime, no 4xx retries)
     authApi.js                  # signup / login / refresh / logout / me
                                 # + forgot / reset / change password, logout-all
     userApi.js                  # profile update, avatar upload, delete account
@@ -110,10 +113,13 @@ src/
                                 # create, update, favourite toggle, delete, import
   util/
     tokenStore.js               # in-memory access token (no localStorage)
+    session.js                  # endSession(): token + redux user + query cache
     importContacts.js           # .vcf / .csv parser + validation (tested)
     vcard.js                    # vCard 3.0 builder + Web Share / download
     exportContacts.js           # pages through every contact into one .vcf
     useSlowHint.js              # "server is waking up" hint for slow requests
+  hooks/
+    useContacts.js              # query keys, list/stats queries, mutations (tested)
   store/
     index.js                    # root reducer
     user.js                     # { user, authReady }
@@ -156,11 +162,11 @@ Full walkthrough: [DEPLOY.md](DEPLOY.md).
 - [x] Settings: change password, sign out everywhere, delete account
 - [x] Import from .vcf / .csv
 - [x] CI: lint, test, build on every PR
+- [x] TanStack Query for server state
 - [ ] Contact tags / groups
 - [ ] "Active sessions" screen letting users revoke individual refresh-token families
 - [ ] Migration to TypeScript
 - [ ] Swap flowbite-react for shadcn/ui
-- [ ] React Query for API state (kills the manual `useEffect` + `reqIdRef` patterns)
 
 ## License
 

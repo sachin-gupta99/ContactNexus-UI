@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 import { BiWorld } from "react-icons/bi";
 import { TbMapPinCode } from "react-icons/tb";
-import { createContactRoute, updateContactRoute } from "../api/contactApi";
+import { useSaveContact } from "../hooks/useContacts";
 import { toastActions } from "../store/toast";
 
 const EMPTY = {
@@ -24,7 +24,8 @@ const EMPTY = {
 const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
   const dispatch = useDispatch();
   const [form, setForm] = useState(EMPTY);
-  const [submitting, setSubmitting] = useState(false);
+  const saveContact = useSaveContact();
+  const submitting = saveContact.isPending;
   const isEdit = Boolean(initialContact?.id);
 
   // Reset / prefill whenever the modal opens or the subject changes.
@@ -56,22 +57,19 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
       Object.entries(form).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])
     );
 
-    setSubmitting(true);
     try {
-      if (isEdit) {
-        await updateContactRoute(initialContact.id, payload);
-        dispatch(toastActions.setToast({ message: "Contact updated", type: "success" }));
-      } else {
-        await createContactRoute(payload);
-        dispatch(toastActions.setToast({ message: "Contact created", type: "success" }));
-      }
+      await saveContact.mutateAsync({ id: isEdit ? initialContact.id : null, payload });
+      dispatch(toastActions.setToast({ message: isEdit ? "Contact updated" : "Contact created", type: "success" }));
       onSaved?.();
       onClose?.();
     } catch (err) {
-      const msg = err.response?.data?.message || `Could not ${isEdit ? "update" : "create"} contact`;
+      // Validation errors arrive as { fields: { name: message } } with no top-level message.
+      const data = err.response?.data;
+      const field = data?.fields && Object.entries(data.fields)[0];
+      const msg = data?.message
+        || (field && `${field[0]}: ${field[1]}`)
+        || `Could not ${isEdit ? "update" : "create"} contact`;
       dispatch(toastActions.setToast({ message: msg, type: "error" }));
-    } finally {
-      setSubmitting(false);
     }
   };
 
