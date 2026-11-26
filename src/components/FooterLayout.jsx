@@ -1,8 +1,21 @@
 import React from "react";
-import { FaTwitter, FaLinkedin, FaGithub, FaHeart } from "react-icons/fa";
-import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { FaGithub, FaHeart } from "react-icons/fa";
+
+const GITHUB_URL = "https://github.com/sachin-gupta99";
+
+const FooterLink = ({ to, children }) => (
+  <li>
+    <Link to={to} className="text-gray-300 hover:text-white transition-colors duration-200">
+      {children}
+    </Link>
+  </li>
+);
 
 const FooterLayout = () => {
+  const isAuthenticated = useSelector((state) => Boolean(state.user?.user));
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -10,86 +23,48 @@ const FooterLayout = () => {
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              {/* <img src={logo} alt="Contact Nexus" className="h-8 w-auto" /> */}
               <span className="text-xl font-bold text-gray-100 font-heading tracking-wider">Contact Nexus</span>
             </div>
             <p className="text-gray-300 mb-6 max-w-md">
-              The modern way to manage and share your professional contacts. 
-              Build meaningful connections that last.
+              A simple, private place to keep your contacts. Save them, star the
+              important ones, and share them as vCards.
             </p>
-            <div className="flex space-x-4">
-              <a 
-                href="#" 
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors duration-300"
-              >
-                <FaTwitter className="w-4 h-4" />
-              </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors duration-300"
-              >
-                <FaLinkedin className="w-4 h-4" />
-              </a>
-              <a 
-                href="#" 
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors duration-300"
-              >
-                <FaGithub className="w-4 h-4" />
-              </a>
-            </div>
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub"
+              className="w-10 h-10 bg-gray-800 rounded-full inline-flex items-center justify-center hover:bg-gray-600 transition-colors duration-300"
+            >
+              <FaGithub className="w-4 h-4" />
+            </a>
           </div>
 
-          {/* Quick Links */}
+          {/* Product */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Features
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Contact
-                </a>
-              </li>
+              <FooterLink to="/home#features">Features</FooterLink>
+              {isAuthenticated ? (
+                <>
+                  <FooterLink to="/contacts">Contacts</FooterLink>
+                  <FooterLink to="/settings">Settings</FooterLink>
+                </>
+              ) : (
+                <>
+                  <FooterLink to="/auth?mode=signup">Create account</FooterLink>
+                  <FooterLink to="/auth?mode=signin">Sign in</FooterLink>
+                </>
+              )}
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Legal */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Support</h3>
+            <h3 className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Help Center
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">
-                  Security
-                </a>
-              </li>
+              <FooterLink to="/privacy">Privacy Policy</FooterLink>
+              <FooterLink to="/terms">Terms of Service</FooterLink>
             </ul>
           </div>
         </div>

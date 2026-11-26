@@ -1,9 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
-import logo from "../assets/logo.png";
-import Navlink from "./Navlink";
 import { Link, NavLink } from "react-router-dom";
-import { IoHome, IoMenu, IoClose } from "react-icons/io5";
+import { IoHome } from "react-icons/io5";
 import { IoMdContacts } from "react-icons/io";
 import Dropdown from "./Dropdown";
 import { Button, Navbar as FlowbiteNavbar } from "flowbite-react";
@@ -82,7 +80,7 @@ const Navbar = () => {
         )}
         {isAuthenticated && (
           <div className="relative" ref={dropdownRef}>
-            <Dropdown isOpen={isOpen} toggleDropdown={toggleDropdown} />
+            <Dropdown isOpen={isOpen} toggleDropdown={toggleDropdown} onClose={() => setIsOpen(false)} />
           </div>
         )}
         <FlowbiteNavbar.Toggle className="text-white hover:bg-white/10" />

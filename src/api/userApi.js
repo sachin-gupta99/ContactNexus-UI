@@ -11,3 +11,8 @@ export const uploadAvatarRoute = (file) => {
   formData.append("file", file);
   return axiosInstance.put("/api/v1/users/me/avatar", formData);
 };
+
+// Needs the password again; 400 if it is wrong. The server clears the refresh cookie.
+export const deleteAccountRoute = (password) => {
+  return axiosInstance.delete("/api/v1/users/me", { data: { password } });
+};

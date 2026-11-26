@@ -6,6 +6,8 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Contacts from "./pages/Contacts";
 import AuthPage from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+import { Privacy, Terms } from "./pages/Legal";
 import { AuthLoader } from "./pages/Auth";
 import { rootLoader } from "./layouts/RootLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -37,7 +39,11 @@ const router = createBrowserRouter([
       },
       {
         path: "settings",
-        element: <Settings />,
+        element: (
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "contacts",
@@ -47,11 +53,20 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: "privacy",
+        element: <Privacy />,
+      },
+      {
+        path: "terms",
+        element: <Terms />,
+      },
+      // Inside the layout so unknown URLs still get the navbar and footer.
+      {
+        path: "*",
+        element: <NotFound />,
+      },
     ],
-  },
-  {
-    path: "*",
-    element: <div>Not Found</div>,
   },
 ]);
 

@@ -22,6 +22,11 @@
 - **Signup / login** with full profile capture (work, address, socials, bio, avatar).
 - **Forgot / reset password** — email-driven flow, single-use tokens, every session revoked on reset.
 - **Server-side contact search + pagination** — debounced search box, request-id race guard, page controls (12 per page by default).
+- **Contact CRUD + favourites** — add / edit / delete from modals, star contacts (optimistic toggle) and filter to favourites (`/contacts?favorites=1`).
+- **vCard sharing** — share any contact through the native share sheet (falls back to a `.vcf` download), share your own card from the profile menu, or export every contact as one `.vcf`.
+- **Live dashboard** — home and profile show real totals, favourites, contacts added this week, and the five most recent contacts.
+- **Account settings** — change password (signs out other devices), sign out everywhere, delete account (password-confirmed).
+- **Privacy / Terms pages** and a real 404 inside the app shell.
 - **Avatar upload** with live preview — stored in a private S3 bucket and displayed through presigned URLs returned by the API.
 - **Secure session flow** — short-lived access JWT + HttpOnly refresh cookie, transparent refresh on 401.
 - **Loud 429 handling** — the login toast surfaces the server's rate-limit message instead of swallowing it as "Invalid credentials".
@@ -47,9 +52,11 @@ See [ContactNexus-Service's refresh-token design](https://github.com/sachin-gupt
 | `/auth?mode=signup` | `components/SimpleSignUpForm.jsx` | public |
 | `/auth?mode=forgot` | `components/ForgotPasswordForm.jsx` | public |
 | `/auth?mode=reset&token=…` | `components/ResetPasswordForm.jsx` | public |
-| `/contacts` | `pages/Contacts.jsx` | ✅ |
+| `/contacts` | `pages/Contacts.jsx` (`?favorites=1` filters, `?new=1` opens the add form) | ✅ |
 | `/profile` | `pages/Profile.jsx` | ✅ |
 | `/settings` | `pages/Settings.jsx` | ✅ |
+| `/privacy`, `/terms` | `pages/Legal.jsx` | public |
+| `*` | `pages/NotFound.jsx` | public |
 
 ## Quick start
 
@@ -76,7 +83,7 @@ Node 20+ recommended.
 ## Tech stack
 
 - **React 18** + **Vite 5** + **React Router 6**
-- **Redux Toolkit** for `user` + `toast` + `contact` slices
+- **Redux Toolkit** for `user` + `toast` slices
 - **Tailwind CSS 3** + **flowbite-react** for form primitives
 - **Axios** with request/response interceptors for auth
 - **react-icons**, **react-spinners**, **prop-types**, **jwt-decode**
@@ -90,27 +97,33 @@ src/
   api/
     axiosInstance.js            # bearer header + single-flight 401 refresh
     authApi.js                  # signup / login / refresh / logout / me
-                                # + forgotPassword / resetPassword
-    userApi.js                  # avatar upload
-    contactApi.js               # list (q, page, size, sort), get, create, update, delete
+                                # + forgot / reset / change password, logout-all
+    userApi.js                  # profile update, avatar upload, delete account
+    contactApi.js               # list (q, favorite, page, size, sort), stats, get,
+                                # create, update, favourite toggle, delete
   util/
     tokenStore.js               # in-memory access token (no localStorage)
+    vcard.js                    # vCard 3.0 builder + Web Share / download
+    exportContacts.js           # pages through every contact into one .vcf
+    useSlowHint.js              # "server is waking up" hint for slow requests
   store/
     index.js                    # root reducer
     user.js                     # { user, authReady }
-    contact.js, toast.js
+    toast.js
   layouts/
     RootLayout.jsx              # boot /refresh + layout shell
   pages/
     Auth.jsx                    # routes to SignIn / SignUp / Forgot / Reset form
-    Home.jsx, Contacts.jsx      # Contacts = paginated + searchable, backed by real API
+    Home.jsx                    # marketing page, or live dashboard when signed in
+    Contacts.jsx                # paginated, searchable, favourites filter
     Profile.jsx, Settings.jsx
+    Legal.jsx, NotFound.jsx
   components/
     SignInForm.jsx, SimpleSignUpForm.jsx
     ForgotPasswordForm.jsx, ResetPasswordForm.jsx
-    ProtectedRoute.jsx, Navbar.jsx, Dropdown.jsx
-    ContactCard.jsx, ImagePicker.jsx, ToastContainer.jsx
-    ...
+    ProtectedRoute.jsx, Navbar.jsx, Dropdown.jsx, FooterLayout.jsx
+    ContactCard.jsx, ContactFormModal.jsx, ConfirmModal.jsx
+    EditProfileModal.jsx, ImagePicker.jsx, ToastContainer.jsx
 ```
 
 ## Deployment
@@ -130,8 +143,10 @@ Full walkthrough: [DEPLOY.md](DEPLOY.md).
 - [x] Full-profile signup + login
 - [x] Forgot / reset password UI
 - [x] Contacts page backed by the real paginated API with debounced search
-- [ ] Add / edit / delete contact UI (API routes already exist in `contactApi.js`)
-- [ ] Favourites and contact tags
+- [x] Add / edit / delete contact UI
+- [x] Favourites, vCard share and export
+- [x] Settings: change password, sign out everywhere, delete account
+- [ ] Contact tags / groups
 - [ ] "Active sessions" screen letting users revoke individual refresh-token families
 - [ ] Migration to TypeScript
 - [ ] Swap flowbite-react for shadcn/ui
