@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Toast } from "flowbite-react";
 import { HiCheck, HiExclamation } from "react-icons/hi";

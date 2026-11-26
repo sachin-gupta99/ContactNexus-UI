@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { HiMail } from "react-icons/hi";
 import { Button, Label, TextInput } from "flowbite-react";
 import { forgotPasswordRoute } from "../api/authApi";
-import { router } from "../App";
+import { router } from "../router";
 
 const ForgotPasswordForm = () => {
   const emailRef = useRef();

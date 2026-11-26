@@ -1,4 +1,3 @@
-import React from "react";
 import { IoPerson } from "react-icons/io5";
 import { IoMdSettings } from "react-icons/io";
 import { IoLogOut } from "react-icons/io5";
@@ -7,7 +6,7 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutRoute } from "../api/authApi";
 import { clearAccessToken } from "../util/tokenStore";
-import { router } from "../App";
+import { router } from "../router";
 import { userActions } from "../store/user";
 import { toastActions } from "../store/toast";
 import { buildVCard, shareVCard, userToCard } from "../util/vcard";

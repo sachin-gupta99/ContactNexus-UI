@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { IoHome } from "react-icons/io5";

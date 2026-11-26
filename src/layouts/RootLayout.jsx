@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Navbar from "../components/Navbar";
 import FooterLayout from "../components/FooterLayout";
-import { router } from "../App";
+import { router } from "../router";
 import { refreshAccessToken } from "../api/axiosInstance";
 import { userActions } from "../store/user";
 
@@ -73,7 +73,3 @@ const RootLayout = () => {
 };
 
 export default RootLayout;
-
-export const rootLoader = () => {
-  return import("./RootLayout");
-};

@@ -1,5 +1,7 @@
 # ContactNexus UI
 
+[![CI](https://github.com/sachin-gupta99/ContactNexus-UI/actions/workflows/ci.yml/badge.svg)](https://github.com/sachin-gupta99/ContactNexus-UI/actions/workflows/ci.yml)
+
 <div align="center">
   <img src="https://img.shields.io/badge/React-18.2-61dafb?style=for-the-badge&logo=react" alt="React" />
   <img src="https://img.shields.io/badge/Vite-5.2-646cff?style=for-the-badge&logo=vite" alt="Vite" />
@@ -23,6 +25,7 @@
 - **Forgot / reset password** — email-driven flow, single-use tokens, every session revoked on reset.
 - **Server-side contact search + pagination** — debounced search box, request-id race guard, page controls (12 per page by default).
 - **Contact CRUD + favourites** — add / edit / delete from modals, star contacts (optimistic toggle) and filter to favourites (`/contacts?favorites=1`).
+- **Import contacts** from a `.vcf` (Android 2.1 with quoted-printable, iOS / Google / Outlook 3.0+) or `.csv` (Google, Outlook or plain name/email columns). Parsed in the browser with a preview; rows without a valid email are listed and skipped, duplicates are skipped by the server.
 - **vCard sharing** — share any contact through the native share sheet (falls back to a `.vcf` download), share your own card from the profile menu, or export every contact as one `.vcf`.
 - **Live dashboard** — home and profile show real totals, favourites, contacts added this week, and the five most recent contacts.
 - **Account settings** — change password (signs out other devices), sign out everywhere, delete account (password-confirmed).
@@ -79,6 +82,9 @@ Node 20+ recommended.
 | `npm run build` | Production build into `dist/` |
 | `npm run preview` | Serve the built `dist/` locally |
 | `npm run lint` | ESLint (`--max-warnings 0`) |
+| `npm test` | Vitest unit tests (`src/**/*.test.js`) |
+
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs `npm install`, lint, test and build on Node 22 for every pull request and push to `main`.
 
 ## Tech stack
 
@@ -92,7 +98,8 @@ Node 20+ recommended.
 
 ```
 src/
-  App.jsx                       # createBrowserRouter root
+  App.jsx                       # RouterProvider + toasts
+  router.jsx                    # route table (createBrowserRouter)
   main.jsx                      # ReactDOM + Redux Provider
   api/
     axiosInstance.js            # bearer header + single-flight 401 refresh
@@ -100,9 +107,10 @@ src/
                                 # + forgot / reset / change password, logout-all
     userApi.js                  # profile update, avatar upload, delete account
     contactApi.js               # list (q, favorite, page, size, sort), stats, get,
-                                # create, update, favourite toggle, delete
+                                # create, update, favourite toggle, delete, import
   util/
     tokenStore.js               # in-memory access token (no localStorage)
+    importContacts.js           # .vcf / .csv parser + validation (tested)
     vcard.js                    # vCard 3.0 builder + Web Share / download
     exportContacts.js           # pages through every contact into one .vcf
     useSlowHint.js              # "server is waking up" hint for slow requests
@@ -122,7 +130,7 @@ src/
     SignInForm.jsx, SimpleSignUpForm.jsx
     ForgotPasswordForm.jsx, ResetPasswordForm.jsx
     ProtectedRoute.jsx, Navbar.jsx, Dropdown.jsx, FooterLayout.jsx
-    ContactCard.jsx, ContactFormModal.jsx, ConfirmModal.jsx
+    ContactCard.jsx, ContactFormModal.jsx, ImportContactsModal.jsx, ConfirmModal.jsx
     EditProfileModal.jsx, ImagePicker.jsx, ToastContainer.jsx
 ```
 
@@ -146,6 +154,8 @@ Full walkthrough: [DEPLOY.md](DEPLOY.md).
 - [x] Add / edit / delete contact UI
 - [x] Favourites, vCard share and export
 - [x] Settings: change password, sign out everywhere, delete account
+- [x] Import from .vcf / .csv
+- [x] CI: lint, test, build on every PR
 - [ ] Contact tags / groups
 - [ ] "Active sessions" screen letting users revoke individual refresh-token families
 - [ ] Migration to TypeScript

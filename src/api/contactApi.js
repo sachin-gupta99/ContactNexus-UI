@@ -39,3 +39,8 @@ export const updateContactRoute = (id, payload) => {
 export const deleteContactRoute = (id) => {
   return axiosInstance.delete(`/api/v1/contacts/${id}`);
 };
+
+// Up to 500 contacts per call; returns { imported, skippedDuplicates }.
+export const importContactsRoute = (contacts) => {
+  return axiosInstance.post("/api/v1/contacts/import", { contacts });
+};

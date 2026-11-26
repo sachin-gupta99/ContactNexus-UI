@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Card, Label, Modal, TextInput } from "flowbite-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -11,7 +11,7 @@ import { deleteAccountRoute } from "../api/userApi";
 import { clearAccessToken, setAccessToken } from "../util/tokenStore";
 import { userActions } from "../store/user";
 import { toastActions } from "../store/toast";
-import { router } from "../App";
+import { router } from "../router";
 
 const MIN_PASSWORD = 8;
 const MAX_PASSWORD = 72; // bcrypt ignores everything past 72 bytes
