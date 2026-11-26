@@ -23,9 +23,16 @@
 - **Dark theme** with cyan→blue gradients and glassmorphism accents.
 - **Signup / login** with full profile capture (work, address, socials, bio, avatar).
 - **Forgot / reset password** — email-driven flow, single-use tokens, every session revoked on reset.
+- **Email verification** — signup sends a confirmation link and lands on a "check your email" screen with a resend button; the link signs you in. Signing in before confirming explains what to do instead of failing silently.
+- **Account lockout notice** — after 5 wrong passwords the form explains the 15-minute pause and links to password reset.
+- **Signed-in devices** — Settings lists every device ("Chrome on Windows · signed in 3 days ago · active 2 hours ago"), marks this one, and signs any of them out.
 - **Server-side contact search + pagination** — debounced search box, request-id race guard, page controls (12 per page by default).
 - **Contact CRUD + favourites** — add / edit / delete from modals, star contacts (optimistic toggle) and filter to favourites (`/contacts?favorites=1`).
 - **Import contacts** from a `.vcf` (Android 2.1 with quoted-printable, iOS / Google / Outlook 3.0+) or `.csv` (Google, Outlook or plain name/email columns). Parsed in the browser with a preview; rows without a valid email are listed and skipped, duplicates are skipped by the server.
+- **Tags (groups)** — add tags in the contact form (suggestions from existing ones), filter with chips, export just one tag as `.vcf` (`CATEGORIES`), delete a tag everywhere. Imports read vCard `CATEGORIES` and Google `Labels` / `Group Membership`.
+- **Contact photos** — upload a photo per contact (private S3, presigned URLs) or keep using an image link; remove it any time.
+- **Sorting** — name A–Z / Z–A, recently added, or favourites first; kept in the URL (`?sort=`).
+- **Duplicate detection** — a banner flags contacts sharing an email or phone number, with a review list to edit or delete the extras.
 - **vCard sharing** — share any contact through the native share sheet (falls back to a `.vcf` download), share your own card from the profile menu, or export every contact as one `.vcf`.
 - **Live dashboard** — home and profile show real totals, favourites, contacts added this week, and the five most recent contacts.
 - **Account settings** — change password (signs out other devices), sign out everywhere, delete account (password-confirmed).
@@ -56,7 +63,9 @@ See [ContactNexus-Service's refresh-token design](https://github.com/sachin-gupt
 | `/auth?mode=signup` | `components/SimpleSignUpForm.jsx` | public |
 | `/auth?mode=forgot` | `components/ForgotPasswordForm.jsx` | public |
 | `/auth?mode=reset&token=…` | `components/ResetPasswordForm.jsx` | public |
-| `/contacts` | `pages/Contacts.jsx` (`?favorites=1` filters, `?new=1` opens the add form) | ✅ |
+| `/auth?mode=verify&token=…` | `components/VerifyEmail.jsx` | public |
+| `/auth?mode=check-email&email=…` | `components/CheckEmail.jsx` | public |
+| `/contacts` | `pages/Contacts.jsx` (`?favorites=1`, `?tag=`, `?sort=name-desc\|recent\|favourites`, `?new=1` opens the add form) | ✅ |
 | `/profile` | `pages/Profile.jsx` | ✅ |
 | `/settings` | `pages/Settings.jsx` | ✅ |
 | `/privacy`, `/terms` | `pages/Legal.jsx` | public |
@@ -163,8 +172,9 @@ Full walkthrough: [DEPLOY.md](DEPLOY.md).
 - [x] Import from .vcf / .csv
 - [x] CI: lint, test, build on every PR
 - [x] TanStack Query for server state
-- [ ] Contact tags / groups
-- [ ] "Active sessions" screen letting users revoke individual refresh-token families
+- [x] Contact tags / groups, photos, sorting, duplicate detection
+- [x] "Signed-in devices" screen with per-device sign-out
+- [x] Email verification and account lockout
 - [ ] Migration to TypeScript
 - [ ] Swap flowbite-react for shadcn/ui
 

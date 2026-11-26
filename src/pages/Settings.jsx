@@ -4,9 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { FaSignOutAlt, FaTrash, FaUserEdit } from "react-icons/fa";
-import ConfirmModal from "../components/ConfirmModal";
-import { changePasswordRoute, logoutAllRoute } from "../api/authApi";
+import { FaTrash, FaUserEdit } from "react-icons/fa";
+import ActiveSessions from "../components/ActiveSessions";
+import { changePasswordRoute } from "../api/authApi";
 import { deleteAccountRoute } from "../api/userApi";
 import { setAccessToken } from "../util/tokenStore";
 import { endSession } from "../util/session";
@@ -143,46 +143,14 @@ const ChangePassword = () => {
   );
 };
 
-const SignOutEverywhere = () => {
-  const dispatch = useDispatch();
-  const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  const confirm = async () => {
-    setBusy(true);
-    try {
-      await logoutAllRoute();
-      endSession(dispatch);
-      router.navigate("/auth?mode=signin");
-      dispatch(toastActions.setToast({ message: "Signed out on all devices", type: "success" }));
-    } catch (err) {
-      dispatch(toastActions.setToast({ message: errorMessage(err, "Could not sign out everywhere"), type: "error" }));
-      setBusy(false);
-      setOpen(false);
-    }
-  };
-
-  return (
-    <Section
-      title="Sessions"
-      description="Lost a device or signed in on a shared computer? End every session, including this one."
-    >
-      <Button color="light" onClick={() => setOpen(true)}>
-        <FaSignOutAlt className="w-4 h-4 mr-2" />
-        Sign out of all devices
-      </Button>
-      <ConfirmModal
-        isOpen={open}
-        onClose={() => !busy && setOpen(false)}
-        onConfirm={confirm}
-        title="Sign out everywhere?"
-        message="You'll need to sign in again on every device, including this one."
-        confirmLabel="Sign out all"
-        busy={busy}
-      />
-    </Section>
-  );
-};
+const SignOutEverywhere = () => (
+  <Section
+    title="Signed-in devices"
+    description="Lost a device or signed in on a shared computer? Sign it out here."
+  >
+    <ActiveSessions />
+  </Section>
+);
 
 const DeleteAccount = () => {
   const dispatch = useDispatch();

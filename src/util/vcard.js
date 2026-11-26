@@ -26,6 +26,8 @@ export const buildVCard = (c) => {
   }
   (c.urls || []).filter(Boolean).forEach((u) => lines.push(`URL:${esc(u)}`));
   if (c.note) lines.push(`NOTE:${esc(c.note)}`);
+  // Tags become vCard categories: Apple and Google Contacts show them as groups/labels.
+  if (c.categories?.length) lines.push(`CATEGORIES:${c.categories.map(esc).join(",")}`);
   lines.push("END:VCARD");
   // RFC 2426 wants CRLF line endings.
   return lines.join("\r\n");
@@ -40,6 +42,7 @@ export const contactToCard = (c) => ({
   note: c.bio,
   address: { street: c.street, city: c.city, state: c.state, zip: c.zipCode, country: c.country },
   urls: [c.githubUrl, c.linkedinUrl, c.instagramUrl],
+  categories: c.tags,
 });
 
 /** Maps the signed-in user (UserResponse) to a card. */

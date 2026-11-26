@@ -4,9 +4,11 @@ import SignInForm from "../components/SignInForm";
 import SimpleSignUpForm from "../components/SimpleSignUpForm";
 import ForgotPasswordForm from "../components/ForgotPasswordForm";
 import ResetPasswordForm from "../components/ResetPasswordForm";
+import CheckEmail from "../components/CheckEmail";
+import VerifyEmail from "../components/VerifyEmail";
 import { router } from "../router";
 
-const VALID_MODES = ["signin", "signup", "forgot", "reset"];
+const VALID_MODES = ["signin", "signup", "forgot", "reset", "verify", "check-email"];
 
 const Auth = () => {
   const [params] = useSearchParams();
@@ -49,7 +51,7 @@ const Auth = () => {
         </>
       );
     }
-    if (mode === "forgot" || mode === "reset") {
+    if (mode === "forgot" || mode === "reset" || mode === "verify" || mode === "check-email") {
       return (
         <>
           Remembered it?
@@ -80,6 +82,8 @@ const Auth = () => {
             {mode === "signup" && <SimpleSignUpForm />}
             {mode === "forgot" && <ForgotPasswordForm />}
             {mode === "reset" && <ResetPasswordForm />}
+            {mode === "verify" && <VerifyEmail />}
+            {mode === "check-email" && <CheckEmail reason={params.get("reason") || "signup"} />}
           </div>
 
           <div className="text-center mt-6">

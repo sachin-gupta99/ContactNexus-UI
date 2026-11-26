@@ -10,6 +10,8 @@ const ContactCard = ({
   image,
   number,
   email,
+  tags = [],
+  onTagClick,
   isFavorite = false,
   onToggleFavorite,
   onShare,
@@ -24,7 +26,9 @@ const ContactCard = ({
         <div className="flex items-start space-x-3">
           <div className="relative flex-shrink-0">
             <Avatar
-              img={image || "https://via.placeholder.com/60x60?text=Profile"}
+              img={image || undefined}
+              placeholderInitials={(name || "?").charAt(0).toUpperCase()}
+              rounded
               size="md"
               className="ring-2 ring-gray-100"
             />
@@ -42,6 +46,21 @@ const ContactCard = ({
                 <p className="text-gray-600 font-medium text-sm mb-2 leading-relaxed line-clamp-2">
                   {work}
                 </p>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {tags.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => onTagClick?.(t)}
+                        title={`Show contacts tagged ${t}`}
+                        className="rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 hover:bg-purple-100"
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Action buttons: edit, delete, favorite */}

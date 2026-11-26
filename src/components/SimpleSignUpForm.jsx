@@ -11,11 +11,10 @@ import { Button, Label, TextInput, Checkbox, Textarea } from "flowbite-react";
 import ImagePicker from "./ImagePicker";
 import { signUpRoute } from "../api/authApi";
 import { uploadAvatarRoute } from "../api/userApi";
-import { setAccessToken } from "../util/tokenStore";
+import { clearAccessToken, setAccessToken } from "../util/tokenStore";
 import { router } from "../router";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
-import { userActions } from "../store/user";
 import { useSlowHint } from "../util/useSlowHint";
 
 const SimpleSignUpForm = () => {
@@ -158,27 +157,23 @@ const SimpleSignUpForm = () => {
       if (response?.data?.accessToken) {
         setAccessToken(response.data.accessToken, response.data.expiresInSeconds);
 
-        // Signup is JSON, so the avatar goes up separately once we hold a token.
-        // A failed upload must not invalidate an otherwise successful signup.
-        let user = response.data.user;
-        let message = "Account created successfully";
+        // Signup returns a short-lived access token but no session: the account
+        // can't sign in until the email is confirmed. The token is only used to
+        // upload the avatar (signup itself is JSON), then dropped. A failed
+        // upload must not invalidate an otherwise successful signup.
+        let message = "Account created. Check your inbox to confirm your email.";
 
         if (image) {
           setStage("uploading");
           try {
-            const avatar = await uploadAvatarRoute(image);
-            user = {
-              ...user,
-              profile: { ...user.profile, imageUrl: avatar.data.imageUrl },
-            };
+            await uploadAvatarRoute(image);
           } catch {
-            message = "Account created, but the profile image could not be uploaded";
+            message = "Account created, but the profile image could not be uploaded. Check your inbox to confirm your email.";
           }
         }
 
-        dispatch(userActions.setUser(user));
-        dispatch(userActions.setAuthReady(true));
-        router.navigate("/home");
+        clearAccessToken();
+        router.navigate(`/auth?mode=check-email&email=${encodeURIComponent(response.data.user.email)}`);
         dispatch(toastActions.setToast({ message, type: "success" }));
       } else {
         dispatch(

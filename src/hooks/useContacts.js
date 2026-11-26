@@ -3,7 +3,12 @@ import { useSelector } from "react-redux";
 import {
   contactStatsRoute,
   createContactRoute,
+  deleteContactPhotoRoute,
   deleteContactRoute,
+  deleteTagRoute,
+  duplicatesRoute,
+  listTagsRoute,
+  uploadContactPhotoRoute,
   importContactsRoute,
   listContactsRoute,
   setFavoriteRoute,
@@ -17,11 +22,13 @@ export const contactKeys = {
   lists: (userId) => ["contacts", userId, "list"],
   list: (userId, params) => ["contacts", userId, "list", params],
   stats: (userId) => ["contacts", userId, "stats"],
+  tags: (userId) => ["contacts", userId, "tags"],
+  duplicates: (userId) => ["contacts", userId, "duplicates"],
 };
 
 const useUserId = () => useSelector((state) => state.user?.user?.id);
 
-const DEFAULT_LIST = { q: "", page: 0, size: 12, sort: "firstName,asc", favorite: false };
+const DEFAULT_LIST = { q: "", page: 0, size: 12, sort: "firstName,asc", favorite: false, tag: "" };
 
 /** Paged list. Keeps the previous page on screen while the next one loads. */
 export const useContactList = (params) => {
@@ -44,18 +51,61 @@ export const useContactStats = () => {
   });
 };
 
-/** Lists and stats are all derived from the same rows, so any write refreshes them all. */
+/** [{ name, count }] for the filter chips and the tag picker. */
+export const useContactTags = () => {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: contactKeys.tags(userId),
+    queryFn: () => listTagsRoute().then((res) => res.data),
+    enabled: Boolean(userId),
+  });
+};
+
+export const useDuplicates = () => {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: contactKeys.duplicates(userId),
+    queryFn: () => duplicatesRoute().then((res) => res.data),
+    enabled: Boolean(userId),
+  });
+};
+
+/** Lists, stats, tags and duplicates all derive from the same rows, so any write refreshes them all. */
 const useInvalidateContacts = () => {
   const queryClient = useQueryClient();
   const userId = useUserId();
   return () => queryClient.invalidateQueries({ queryKey: contactKeys.all(userId) });
 };
 
+/**
+ * Saves the contact, then uploads or removes its photo (a new contact needs its
+ * id first). A failed photo step doesn't undo the save: the result says
+ * `photoFailed` so the form can tell the user.
+ */
 export const useSaveContact = () => {
   const invalidate = useInvalidateContacts();
   return useMutation({
-    mutationFn: ({ id, payload }) =>
-      (id ? updateContactRoute(id, payload) : createContactRoute(payload)).then((res) => res.data),
+    mutationFn: async ({ id, payload, photo, removePhoto }) => {
+      let contact = (await (id ? updateContactRoute(id, payload) : createContactRoute(payload))).data;
+      try {
+        if (photo) contact = (await uploadContactPhotoRoute(contact.id, photo)).data;
+        else if (removePhoto && contact.hasPhoto) {
+          await deleteContactPhotoRoute(contact.id);
+          contact = { ...contact, hasPhoto: false, imageUrl: null };
+        }
+        return { contact, photoFailed: false };
+      } catch {
+        return { contact, photoFailed: true };
+      }
+    },
+    onSettled: invalidate,
+  });
+};
+
+export const useDeleteTag = () => {
+  const invalidate = useInvalidateContacts();
+  return useMutation({
+    mutationFn: (name) => deleteTagRoute(name),
     onSuccess: invalidate,
   });
 };

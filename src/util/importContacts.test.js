@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  chunk, parseContactsFile, parseCsv, parseCsvRows, parseVCard, prepareContacts,
+  chunk, cleanTags, parseContactsFile, parseCsv, parseCsvRows, parseVCard, prepareContacts,
 } from "./importContacts";
 import { buildVCard, contactToCard } from "./vcard";
 
@@ -163,5 +163,37 @@ describe("parseContactsFile", () => {
 describe("chunk", () => {
   it("splits into server-sized batches", () => {
     expect(chunk(Array.from({ length: 1201 }, (_, i) => i)).map((c) => c.length)).toEqual([500, 500, 201]);
+  });
+});
+
+const NL = String.fromCharCode(10);
+
+describe("tags", () => {
+  it("round-trips tags through vCard CATEGORIES, including commas in names", () => {
+    const original = { firstName: "Tia", email: "tia@example.com", tags: ["Work", "Friends, close"] };
+    const [c] = parseVCard(buildVCard(contactToCard(original)));
+    expect(c.tags).toEqual(["Work", "Friends, close"]);
+  });
+
+  it("reads Google Labels and skips system labels like * myContacts", () => {
+    const text = "First Name,E-mail 1 - Value,Labels" + NL + "Ravi,ravi@example.com,* myContacts ::: Family ::: Work" + NL;
+    const { valid: [c] } = prepareContacts(parseCsv(text));
+    expect(c.tags).toEqual(["Family", "Work"]);
+  });
+
+  it("reads the older Group Membership column", () => {
+    const [c] = parseCsv("Name,E-mail Address,Group Membership" + NL + "Sam Ng,sam@example.com,* Starred ::: Clients" + NL);
+    expect(c.tags).toEqual(["Clients"]);
+  });
+
+  it("cleanTags applies the server's rules", () => {
+    expect(cleanTags(["  Work ", "work", "Close   friends", "", "x".repeat(40)]))
+      .toEqual(["Work", "Close friends", "x".repeat(30)]);
+    expect(cleanTags(Array.from({ length: 12 }, (_, i) => `t${i}`))).toHaveLength(10);
+  });
+
+  it("omits the tags field when there are none", () => {
+    const { valid: [c] } = prepareContacts([{ firstName: "A", email: "a@example.com", tags: [] }]);
+    expect(c).not.toHaveProperty("tags");
   });
 });
