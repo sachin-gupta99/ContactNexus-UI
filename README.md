@@ -84,7 +84,7 @@ Node 20+ recommended.
 | `npm run lint` | ESLint (`--max-warnings 0`) |
 | `npm test` | Vitest unit tests (`src/**/*.test.js`) |
 
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs `npm ci`, lint, test and build on Node 22 for every pull request and push to `main`.
+CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs `npm install`, lint, test and build on Node 22 for every pull request and push to `main`.
 
 ## Tech stack
 
