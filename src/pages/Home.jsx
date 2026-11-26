@@ -10,11 +10,12 @@ import {
   FaUserPlus, FaFileExport,
 } from "react-icons/fa";
 import { Button, Card, Badge, Spinner, Avatar } from "flowbite-react";
-import { contactStatsRoute, listContactsRoute } from "../api/contactApi";
+import { useContactList, useContactStats } from "../hooks/useContacts";
 import { exportAllContacts } from "../util/exportContacts";
 import { toastActions } from "../store/toast";
 
 const RECENT_COUNT = 5;
+const FAILED_STATS = { total: "—", favorites: "—", addedThisWeek: "—" };
 
 const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 const STEPS = [
@@ -191,30 +192,13 @@ export default Home;
 const Dashboard = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [stats, setStats] = useState(null);
-  const [recent, setRecent] = useState(null);
+  // Same cache entries as the Contacts and Profile pages, so a star or delete
+  // there is already reflected here without a refetch.
+  const statsQuery = useContactStats();
+  const recentQuery = useContactList({ page: 0, size: RECENT_COUNT, sort: "createdAt,desc" });
+  const stats = statsQuery.isError ? FAILED_STATS : statsQuery.data;
+  const recent = recentQuery.isError ? [] : (recentQuery.data?.content ?? null);
   const [exporting, setExporting] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    Promise.all([
-      contactStatsRoute(),
-      listContactsRoute({ page: 0, size: RECENT_COUNT, sort: "createdAt,desc" }),
-    ])
-      .then(([s, r]) => {
-        if (cancelled) return;
-        setStats(s.data);
-        setRecent(r.data.content);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setStats({ total: "—", favorites: "—", addedThisWeek: "—" });
-        setRecent([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handleExport = async () => {
     if (exporting) return;

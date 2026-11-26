@@ -8,7 +8,8 @@ import { FaSignOutAlt, FaTrash, FaUserEdit } from "react-icons/fa";
 import ConfirmModal from "../components/ConfirmModal";
 import { changePasswordRoute, logoutAllRoute } from "../api/authApi";
 import { deleteAccountRoute } from "../api/userApi";
-import { clearAccessToken, setAccessToken } from "../util/tokenStore";
+import { setAccessToken } from "../util/tokenStore";
+import { endSession } from "../util/session";
 import { userActions } from "../store/user";
 import { toastActions } from "../store/toast";
 import { router } from "../router";
@@ -142,11 +143,6 @@ const ChangePassword = () => {
   );
 };
 
-const signOutLocally = (dispatch) => {
-  clearAccessToken();
-  dispatch(userActions.clearUser());
-};
-
 const SignOutEverywhere = () => {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
@@ -156,7 +152,7 @@ const SignOutEverywhere = () => {
     setBusy(true);
     try {
       await logoutAllRoute();
-      signOutLocally(dispatch);
+      endSession(dispatch);
       router.navigate("/auth?mode=signin");
       dispatch(toastActions.setToast({ message: "Signed out on all devices", type: "success" }));
     } catch (err) {
@@ -210,7 +206,7 @@ const DeleteAccount = () => {
       // Straight to sign-in, the same place ProtectedRoute sends a signed-out
       // user. Going to /home instead would mount the dashboard with the stale
       // user, its requests would 401, and the interceptor would reload the page.
-      signOutLocally(dispatch);
+      endSession(dispatch);
       router.navigate("/auth?mode=signin");
       dispatch(toastActions.setToast({ message: "Your account has been deleted", type: "success" }));
     } catch (err) {

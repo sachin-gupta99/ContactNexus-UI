@@ -5,9 +5,8 @@ import { FaAddressCard } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutRoute } from "../api/authApi";
-import { clearAccessToken } from "../util/tokenStore";
+import { endSession } from "../util/session";
 import { router } from "../router";
-import { userActions } from "../store/user";
 import { toastActions } from "../store/toast";
 import { buildVCard, shareVCard, userToCard } from "../util/vcard";
 
@@ -32,8 +31,7 @@ const Dropdown = ({ isOpen, toggleDropdown, onClose }) => {
     } catch {
       // Best-effort: even if the server call fails we still clear local state.
     }
-    clearAccessToken();
-    dispatch(userActions.clearUser());
+    endSession(dispatch);
     router.navigate("/auth?mode=signin");
   };
 

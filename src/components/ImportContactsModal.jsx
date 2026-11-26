@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Modal, Button, Progress } from "flowbite-react";
 import { FaFileImport, FaExclamationTriangle } from "react-icons/fa";
-import { importContactsRoute } from "../api/contactApi";
+import { useImportContacts } from "../hooks/useContacts";
 import { chunk, parseContactsFile } from "../util/importContacts";
 import { useSlowHint } from "../util/useSlowHint";
 
@@ -27,6 +27,7 @@ const ImportContactsModal = ({ isOpen, onClose, onImported }) => {
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
   const [progress, setProgress] = useState(null); // { done, total } while importing
+  const importBatch = useImportContacts();
   const busy = progress !== null;
   const slow = useSlowHint(busy);
 
@@ -72,7 +73,7 @@ const ImportContactsModal = ({ isOpen, onClose, onImported }) => {
     setProgress({ done: 0, total: batches.length });
     for (let i = 0; i < batches.length; i++) {
       try {
-        const { data } = await importContactsRoute(batches[i]);
+        const data = await importBatch.mutateAsync(batches[i]);
         imported += data.imported;
         skippedDuplicates += data.skippedDuplicates;
         setProgress({ done: i + 1, total: batches.length });

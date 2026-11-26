@@ -22,11 +22,12 @@ import {
 } from "react-icons/fa";
 import { Spinner } from "flowbite-react";
 import EditProfileModal from "../components/EditProfileModal";
-import { contactStatsRoute, listContactsRoute, setFavoriteRoute } from "../api/contactApi";
+import { useContactList, useContactStats, useToggleFavorite } from "../hooks/useContacts";
 import { buildVCard, shareVCard, userToCard } from "../util/vcard";
 import { toastActions } from "../store/toast";
 
 const FAVOURITES_SHOWN = 20;
+const FAILED_STATS = { total: "—", favorites: "—", addedThisWeek: "—" };
 
 const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,39 +35,23 @@ const Profile = () => {
   const user = useSelector((state) => state.user?.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [stats, setStats] = useState(null);
-  const [favourites, setFavourites] = useState(null);
+  const statsQuery = useContactStats();
+  const favouritesQuery = useContactList({ page: 0, size: FAVOURITES_SHOWN, favorite: true });
+  const toggleFavorite = useToggleFavorite();
+  const stats = statsQuery.isError ? FAILED_STATS : statsQuery.data;
+  const favourites = favouritesQuery.isError ? [] : (favouritesQuery.data?.content ?? null);
 
   useEffect(() => {
     document.title = "Profile - Contact Nexus";
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    contactStatsRoute()
-      .then((res) => !cancelled && setStats(res.data))
-      .catch(() => !cancelled && setStats({ total: "—", favorites: "—", addedThisWeek: "—" }));
-    listContactsRoute({ page: 0, size: FAVOURITES_SHOWN, favorite: true })
-      .then((res) => !cancelled && setFavourites(res.data.content))
-      .catch(() => !cancelled && setFavourites([]));
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const bumpFavourites = (delta) =>
-    setStats((st) => (st && typeof st.favorites === "number" ? { ...st, favorites: st.favorites + delta } : st));
-
-  const unfavourite = async (contact) => {
-    setFavourites((list) => list.filter((c) => c.id !== contact.id));
-    bumpFavourites(-1);
-    try {
-      await setFavoriteRoute(contact.id, false);
-    } catch {
-      setFavourites((list) => [...list, contact]);
-      bumpFavourites(1);
-      dispatch(toastActions.setToast({ message: "Could not update favourite", type: "error" }));
-    }
+  // The hook removes the card and decrements the count optimistically, and
+  // rolls both back if the request fails.
+  const unfavourite = (contact) => {
+    toggleFavorite.mutate(
+      { id: contact.id, favorite: false },
+      { onError: () => dispatch(toastActions.setToast({ message: "Could not update favourite", type: "error" })) },
+    );
   };
 
   const shareMyCard = async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Pagination, TextInput, Button, Badge, Spinner } from "flowbite-react";
 import { FaSearch, FaPlus, FaUserFriends, FaStar, FaFileExport, FaFileImport } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
@@ -6,7 +6,7 @@ import ContactCard from "../components/ContactCard";
 import ContactFormModal from "../components/ContactFormModal";
 import ConfirmModal from "../components/ConfirmModal";
 import ImportContactsModal from "../components/ImportContactsModal";
-import { listContactsRoute, deleteContactRoute, setFavoriteRoute } from "../api/contactApi";
+import { useContactList, useDeleteContact, useToggleFavorite } from "../hooks/useContacts";
 import { buildVCard, contactToCard, shareVCard } from "../util/vcard";
 import { exportAllContacts } from "../util/exportContacts";
 import { useDispatch } from "react-redux";
@@ -14,6 +14,7 @@ import { toastActions } from "../store/toast";
 
 const PAGE_SIZE = 12;
 const SEARCH_DEBOUNCE_MS = 300;
+const EMPTY_PAGE = { content: [], totalElements: 0, totalPages: 0 };
 
 const displayName = (c) => [c.firstName, c.lastName].filter(Boolean).join(" ") || c.email;
 
@@ -22,18 +23,10 @@ const Contacts = () => {
   const [uiPage, setUiPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [page, setPage] = useState({ content: [], totalElements: 0, totalPages: 0 });
-
-  // Bumped after create / update / delete to force a re-fetch of the current
-  // page. Alternative would be to mutate `page.content` optimistically, but
-  // that would get totalElements / totalPages wrong without extra math.
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);         // null => create mode
   const [deleteTarget, setDeleteTarget] = useState(null);     // contact to delete, or null
-  const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -44,6 +37,20 @@ const Contacts = () => {
   // opens the create form once and is then removed from the URL.
   const [searchParams, setSearchParams] = useSearchParams();
   const favoritesOnly = searchParams.get("favorites") === "1";
+
+  // The query key includes every parameter, so a newer search can't be
+  // overwritten by a slow older response (what reqIdRef used to guard against).
+  const listQuery = useContactList({
+    q: debouncedQ,
+    page: uiPage - 1,
+    size: PAGE_SIZE,
+    favorite: favoritesOnly,
+  });
+  const page = listQuery.data ?? EMPTY_PAGE;
+  const contacts = page.content;
+
+  const deleteContact = useDeleteContact();
+  const toggleFavorite = useToggleFavorite();
 
   useEffect(() => {
     document.title = "Contacts - Contact Nexus";
@@ -58,6 +65,13 @@ const Contacts = () => {
       setSearchParams(next, { replace: true });
     }
   }, [searchParams, setSearchParams]);
+
+  // A delete, unstar or import can leave us past the last page; step back.
+  useEffect(() => {
+    if (listQuery.data && !listQuery.isPlaceholderData && uiPage > Math.max(1, page.totalPages)) {
+      setUiPage(Math.max(1, page.totalPages));
+    }
+  }, [listQuery.data, listQuery.isPlaceholderData, page.totalPages, uiPage]);
 
   const setFilter = (favorites) => {
     const next = new URLSearchParams(searchParams);
@@ -76,29 +90,6 @@ const Contacts = () => {
     return () => clearTimeout(id);
   }, [searchTerm]);
 
-  // Fetch whenever the committed query, filter, page, or refreshKey changes.
-  // reqIdRef prevents a slow earlier response from overwriting a newer one.
-  const reqIdRef = useRef(0);
-  useEffect(() => {
-    const myReq = ++reqIdRef.current;
-    setIsLoading(true);
-    listContactsRoute({ q: debouncedQ, page: uiPage - 1, size: PAGE_SIZE, favorite: favoritesOnly })
-      .then((res) => {
-        if (reqIdRef.current === myReq) setPage(res.data);
-      })
-      .catch((err) => {
-        if (reqIdRef.current !== myReq) return;
-        dispatch(toastActions.setToast({
-          message: err.response?.data?.message || "Could not load contacts",
-          type: "error",
-        }));
-        setPage({ content: [], totalElements: 0, totalPages: 0 });
-      })
-      .finally(() => {
-        if (reqIdRef.current === myReq) setIsLoading(false);
-      });
-  }, [debouncedQ, uiPage, refreshKey, favoritesOnly, dispatch]);
-
   const openCreate = () => {
     setEditTarget(null);
     setFormOpen(true);
@@ -114,51 +105,28 @@ const Contacts = () => {
     setEditTarget(null);
   };
 
+  // The modal's mutation already refreshed the cache; a new contact most
+  // likely sorts onto the first page.
   const handleSaved = () => {
-    // Create usually lands on the first page; edits keep current page. Either
-    // way bump refreshKey and let the fetch effect do its thing.
     if (!editTarget) setUiPage(1);
-    setRefreshKey((k) => k + 1);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await deleteContactRoute(deleteTarget.id);
-      toast("Contact deleted");
-      // If we just emptied the current page (and there's a previous one), step back.
-      if (page.content.length === 1 && uiPage > 1) {
-        setUiPage(uiPage - 1);
-      }
-      setRefreshKey((k) => k + 1);
-      setDeleteTarget(null);
-    } catch (err) {
-      toast(err.response?.data?.message || "Could not delete contact", "error");
-    } finally {
-      setDeleting(false);
-    }
+    deleteContact.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast("Contact deleted");
+        setDeleteTarget(null);
+      },
+      onError: (err) => toast(err.response?.data?.message || "Could not delete contact", "error"),
+    });
   };
 
-  // Optimistic: flip the star immediately, roll back if the call fails. In the
-  // Favourites view an unstarred contact no longer belongs, so re-fetch instead.
-  const toggleFavorite = async (contact) => {
-    const next = !contact.favorite;
-    const patch = (fav) => setPage((p) => ({
-      ...p,
-      content: p.content.map((c) => (c.id === contact.id ? { ...c, favorite: fav } : c)),
-    }));
-    patch(next);
-    try {
-      await setFavoriteRoute(contact.id, next);
-      if (favoritesOnly && !next) {
-        if (page.content.length === 1 && uiPage > 1) setUiPage(uiPage - 1);
-        setRefreshKey((k) => k + 1);
-      }
-    } catch (err) {
-      patch(!next);
-      toast(err.response?.data?.message || "Could not update favourite", "error");
-    }
+  const onToggleFavorite = (contact) => {
+    toggleFavorite.mutate(
+      { id: contact.id, favorite: !contact.favorite },
+      { onError: (err) => toast(err.response?.data?.message || "Could not update favourite", "error") },
+    );
   };
 
   const shareContact = async (contact) => {
@@ -186,10 +154,7 @@ const Contacts = () => {
     if (invalid) parts.push(`${invalid} had no valid email`);
     if (!partial) toast(parts.join(" · "));
     setUiPage(1);
-    setRefreshKey((k) => k + 1);
   };
-
-  const contacts = page.content || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -270,13 +235,29 @@ const Contacts = () => {
         </div>
 
         {/* Grid */}
-        {isLoading ? (
+        {listQuery.isPending ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Spinner size="xl" className="mb-4" />
             <p className="text-gray-600 font-medium">Loading your contacts...</p>
           </div>
+        ) : listQuery.isError && !listQuery.data ? (
+          <div className="text-center py-20" role="alert">
+            <h3 className="text-xl font-medium text-gray-900 mb-2">Couldn’t load your contacts</h3>
+            <p className="text-gray-500 mb-6">
+              {listQuery.error?.response?.data?.message || "Check your connection and try again."}
+            </p>
+            <Button color="light" className="mx-auto" onClick={() => listQuery.refetch()}>
+              Try again
+            </Button>
+          </div>
         ) : contacts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          // Dimmed while the next page or search loads; the old results stay visible.
+          <div
+            aria-busy={listQuery.isPlaceholderData}
+            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8 transition-opacity ${
+              listQuery.isPlaceholderData ? "opacity-60" : ""
+            }`}
+          >
             {contacts.map((c) => (
               <ContactCard
                 key={c.id}
@@ -286,7 +267,7 @@ const Contacts = () => {
                 email={c.email}
                 image={c.imageUrl}
                 isFavorite={c.favorite}
-                onToggleFavorite={() => toggleFavorite(c)}
+                onToggleFavorite={() => onToggleFavorite(c)}
                 onShare={() => shareContact(c)}
                 onEdit={() => openEdit(c)}
                 onDelete={() => setDeleteTarget(c)}
@@ -358,7 +339,7 @@ const Contacts = () => {
         title="Delete this contact?"
         message={deleteTarget ? `${displayName(deleteTarget)} will be removed permanently.` : ""}
         confirmLabel="Delete"
-        busy={deleting}
+        busy={deleteContact.isPending}
       />
     </div>
   );
