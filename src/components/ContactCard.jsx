@@ -3,6 +3,9 @@ import {
   FaPencilAlt, FaTrash,
 } from "react-icons/fa";
 import { Card, Button, Avatar } from "flowbite-react";
+import { FaBirthdayCake, FaRegClock } from "react-icons/fa";
+import { timeAgo } from "../util/time";
+import { describeInDays, nextBirthday } from "../util/birthday";
 
 const ContactCard = ({
   name,
@@ -12,14 +15,34 @@ const ContactCard = ({
   email,
   tags = [],
   onTagClick,
+  lastContactedAt,
+  birthday,          // { birthdayMonth, birthdayDay, birthdayYear } or null
+  onOpen,            // opens the detail view (notes + timeline)
+  selectable = false,
+  selected = false,
+  onSelect,
   isFavorite = false,
   onToggleFavorite,
   onShare,
   onEdit,
   onDelete,
 }) => {
+  const upcoming = birthday ? nextBirthday(birthday) : null;
+  const soon = upcoming && upcoming.inDays <= 7 ? upcoming : null;
   return (
-    <Card className="max-w-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white rounded-xl overflow-hidden">
+    <Card className={`relative max-w-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white rounded-xl overflow-hidden ${
+      selected ? "ring-2 ring-purple-500" : ""}`}>
+      {selectable && (
+        <label className="absolute left-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-white/90 shadow">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={(e) => onSelect?.(e.target.checked)}
+            aria-label={`Select ${name}`}
+            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+          />
+        </label>
+      )}
 
       {/* Header */}
       <div className="bg-white p-0 pb-0">
@@ -41,7 +64,11 @@ const ContactCard = ({
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-bold text-gray-900 mb-1 leading-tight truncate">
-                  {name}
+                  {onOpen ? (
+                    <button type="button" onClick={onOpen} className="truncate text-left hover:text-purple-700 hover:underline">
+                      {name}
+                    </button>
+                  ) : name}
                 </h3>
                 <p className="text-gray-600 font-medium text-sm mb-2 leading-relaxed line-clamp-2">
                   {work}
@@ -59,6 +86,22 @@ const ContactCard = ({
                         {t}
                       </button>
                     ))}
+                  </div>
+                )}
+                {(lastContactedAt || soon) && (
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-1">
+                    {soon && (
+                      <span className="inline-flex items-center gap-1 font-medium text-pink-600">
+                        <FaBirthdayCake className="h-3 w-3" aria-hidden />
+                        Birthday {describeInDays(soon.inDays)}{soon.turning ? ` (${soon.turning})` : ""}
+                      </span>
+                    )}
+                    {lastContactedAt && (
+                      <span className="inline-flex items-center gap-1" title={new Date(lastContactedAt).toLocaleString()}>
+                        <FaRegClock className="h-3 w-3" aria-hidden />
+                        Contacted {timeAgo(lastContactedAt)}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

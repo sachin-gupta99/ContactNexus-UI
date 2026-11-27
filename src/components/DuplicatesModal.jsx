@@ -8,7 +8,7 @@ const name = (c) => [c.firstName, c.lastName].filter(Boolean).join(" ") || c.ema
  * Groups of contacts that share an email or phone number. Editing or deleting
  * closes this list first; it reopens with whatever is still left to review.
  */
-const DuplicatesModal = ({ isOpen, onClose, groups = [], onEdit, onDelete }) => (
+const DuplicatesModal = ({ isOpen, onClose, groups = [], onEdit, onDelete, onMerge }) => (
   <Modal show={isOpen} onClose={onClose} size="2xl" dismissible>
     <Modal.Header>Possible duplicates</Modal.Header>
     <Modal.Body className="max-h-[70vh] overflow-y-auto">
@@ -17,13 +17,16 @@ const DuplicatesModal = ({ isOpen, onClose, groups = [], onEdit, onDelete }) => 
       ) : (
         <div className="space-y-6">
           <p className="text-sm text-gray-600">
-            These contacts share an email address or phone number. Keep the one you want and delete or edit the others.
+            These contacts share an email address or phone number. Merge them into one, or edit or delete the extras.
           </p>
           {groups.map((g) => (
             <section key={`${g.reason}:${g.value}`} className="border border-gray-200 rounded-lg">
               <h3 className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-700 rounded-t-lg">
                 {g.reason === "email" ? <FaEnvelope className="w-3.5 h-3.5" /> : <FaPhone className="w-3.5 h-3.5" />}
-                Same {g.reason}: <span className="font-normal truncate">{g.value}</span>
+                Same {g.reason}: <span className="flex-1 font-normal truncate">{g.value}</span>
+                <Button size="xs" gradientDuoTone="purpleToBlue" onClick={() => onMerge(g.contacts)}>
+                  Merge
+                </Button>
               </h3>
               <ul className="divide-y divide-gray-100">
                 {g.contacts.map((c, i) => (

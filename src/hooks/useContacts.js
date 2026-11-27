@@ -1,6 +1,13 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import {
+  getContactRoute,
+  addInteractionRoute,
+  bulkContactsRoute,
+  deleteInteractionRoute,
+  listInteractionsRoute,
+  mergeContactsRoute,
+  upcomingBirthdaysRoute,
   contactStatsRoute,
   createContactRoute,
   deleteContactPhotoRoute,
@@ -24,6 +31,9 @@ export const contactKeys = {
   stats: (userId) => ["contacts", userId, "stats"],
   tags: (userId) => ["contacts", userId, "tags"],
   duplicates: (userId) => ["contacts", userId, "duplicates"],
+  interactions: (userId, contactId) => ["contacts", userId, "interactions", contactId],
+  detail: (userId, contactId) => ["contacts", userId, "detail", contactId],
+  birthdays: (userId, days) => ["contacts", userId, "birthdays", days],
 };
 
 const useUserId = () => useSelector((state) => state.user?.user?.id);
@@ -189,6 +199,72 @@ export const useToggleFavorite = () => {
 
     // Re-sync with the server either way: favourites lists may need a contact
     // added, and page counts may have shifted.
+    onSettled: invalidate,
+  });
+};
+
+// ---- timeline -------------------------------------------------------------
+
+/** One contact, starting from the copy a list already has and refreshing with the cache. */
+export const useContact = (contactId, placeholder) => {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: contactKeys.detail(userId, contactId),
+    queryFn: () => getContactRoute(contactId).then((res) => res.data),
+    enabled: Boolean(userId && contactId),
+    placeholderData: placeholder,
+  });
+};
+
+export const useInteractions = (contactId) => {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: contactKeys.interactions(userId, contactId),
+    queryFn: () => listInteractionsRoute(contactId).then((res) => res.data),
+    enabled: Boolean(userId && contactId),
+  });
+};
+
+/** Logging or removing an entry moves the contact's "last contacted", so lists refresh too. */
+export const useAddInteraction = (contactId) => {
+  const invalidate = useInvalidateContacts();
+  return useMutation({
+    mutationFn: (payload) => addInteractionRoute(contactId, payload).then((res) => res.data),
+    onSuccess: invalidate,
+  });
+};
+
+export const useDeleteInteraction = (contactId) => {
+  const invalidate = useInvalidateContacts();
+  return useMutation({
+    mutationFn: (interactionId) => deleteInteractionRoute(contactId, interactionId),
+    onSuccess: invalidate,
+  });
+};
+
+export const useUpcomingBirthdays = (days = 30) => {
+  const userId = useUserId();
+  return useQuery({
+    queryKey: contactKeys.birthdays(userId, days),
+    queryFn: () => upcomingBirthdaysRoute(days).then((res) => res.data),
+    enabled: Boolean(userId),
+  });
+};
+
+// ---- bulk + merge ---------------------------------------------------------
+
+export const useBulkAction = () => {
+  const invalidate = useInvalidateContacts();
+  return useMutation({
+    mutationFn: ({ ids, action, tags }) => bulkContactsRoute(ids, action, tags).then((res) => res.data),
+    onSettled: invalidate,
+  });
+};
+
+export const useMergeContacts = () => {
+  const invalidate = useInvalidateContacts();
+  return useMutation({
+    mutationFn: (payload) => mergeContactsRoute(payload).then((res) => res.data),
     onSettled: invalidate,
   });
 };

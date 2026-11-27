@@ -6,6 +6,7 @@ import Settings from "./pages/Settings";
 import Contacts from "./pages/Contacts";
 import AuthPage from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import PublicCard from "./pages/PublicCard";
 import { Privacy, Terms } from "./pages/Legal";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -48,6 +49,11 @@ export const router = createBrowserRouter([
             <Contacts />
           </ProtectedRoute>
         ),
+      },
+      // Public, read-only card someone shared (the token is the permission).
+      {
+        path: "c/:token",
+        element: <PublicCard />,
       },
       {
         path: "privacy",

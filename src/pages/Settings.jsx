@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Label, Modal, TextInput } from "flowbite-react";
+import { Button, Card, Label, Modal, TextInput, ToggleSwitch } from "flowbite-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { RiLockPasswordFill } from "react-icons/ri";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { FaTrash, FaUserEdit } from "react-icons/fa";
 import ActiveSessions from "../components/ActiveSessions";
+import ShareCardSettings from "../components/ShareCardSettings";
 import { changePasswordRoute } from "../api/authApi";
-import { deleteAccountRoute } from "../api/userApi";
+import { deleteAccountRoute, updatePreferencesRoute } from "../api/userApi";
 import { setAccessToken } from "../util/tokenStore";
 import { endSession } from "../util/session";
 import { userActions } from "../store/user";
@@ -64,6 +65,13 @@ const Settings = () => {
           </div>
         </Section>
 
+        <Section
+          title="Share your card"
+          description="A public link and QR code for your own contact details, so people can save you in one tap."
+        >
+          <ShareCardSettings />
+        </Section>
+        <Reminders />
         <ChangePassword />
         <SignOutEverywhere />
         <DeleteAccount />
@@ -151,6 +159,32 @@ const SignOutEverywhere = () => (
     <ActiveSessions />
   </Section>
 );
+
+const Reminders = () => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user?.user);
+  const [busy, setBusy] = useState(false);
+  const on = user?.birthdayReminders ?? true;
+
+  const toggle = async (next) => {
+    setBusy(true);
+    try {
+      const { data } = await updatePreferencesRoute({ birthdayReminders: next });
+      dispatch(userActions.setUser(data));
+      dispatch(toastActions.setToast({ message: next ? "Birthday emails on" : "Birthday emails off", type: "success" }));
+    } catch (err) {
+      dispatch(toastActions.setToast({ message: errorMessage(err, "Could not save that"), type: "error" }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Section title="Email reminders" description="An email the day before a contact's birthday (sent around 8am IST).">
+      <ToggleSwitch checked={on} disabled={busy} label="Birthday reminders" onChange={toggle} />
+    </Section>
+  );
+};
 
 const DeleteAccount = () => {
   const dispatch = useDispatch();

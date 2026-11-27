@@ -7,10 +7,11 @@ import SaveContacts from "../assets/SaveContacts.jpg";
 import ShareContact from "../assets/ShareContact.jpg";
 import {
   FaArrowRight, FaShieldAlt, FaShareAlt, FaStar, FaUsers, FaHeart,
-  FaUserPlus, FaFileExport,
+  FaUserPlus, FaFileExport, FaBirthdayCake,
 } from "react-icons/fa";
 import { Button, Card, Badge, Spinner, Avatar } from "flowbite-react";
-import { useContactList, useContactStats } from "../hooks/useContacts";
+import { useContactList, useContactStats, useUpcomingBirthdays } from "../hooks/useContacts";
+import { describeInDays } from "../util/birthday";
 import { exportAllContacts } from "../util/exportContacts";
 import { timeAgo } from "../util/time";
 import { toastActions } from "../store/toast";
@@ -184,6 +185,7 @@ const Dashboard = () => {
   // there is already reflected here without a refetch.
   const statsQuery = useContactStats();
   const recentQuery = useContactList({ page: 0, size: RECENT_COUNT, sort: "createdAt,desc" });
+  const birthdaysQuery = useUpcomingBirthdays(30);
   const stats = statsQuery.isError ? FAILED_STATS : statsQuery.data;
   const recent = recentQuery.isError ? [] : (recentQuery.data?.content ?? null);
   const [exporting, setExporting] = useState(false);
@@ -251,6 +253,42 @@ const Dashboard = () => {
             />
           </div>
         </div>
+
+        {/* Upcoming birthdays (only when there are some) */}
+        {birthdaysQuery.data?.length > 0 && (
+          <div className="mb-16">
+            <h3 className="text-3xl font-bold text-gray-800 mb-8 text-center">Upcoming Birthdays</h3>
+            <Card className="border-0 shadow-lg">
+              <ul className="divide-y divide-gray-100">
+                {birthdaysQuery.data.slice(0, 6).map((b) => {
+                  const c = b.contact;
+                  const name = [c.firstName, c.lastName].filter(Boolean).join(" ") || c.email;
+                  return (
+                    <li key={c.id} className="flex items-center gap-4 py-3">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                        b.inDays <= 1 ? "bg-pink-500 text-white" : "bg-pink-50 text-pink-500"}`}>
+                        <FaBirthdayCake className="h-4 w-4" aria-hidden />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-gray-800">{name}</p>
+                        <p className="text-sm text-gray-600">
+                          {new Date(b.date + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long" })}
+                          {b.turning ? ` · turns ${b.turning}` : ""}
+                        </p>
+                      </div>
+                      <span className={`whitespace-nowrap text-sm font-medium ${b.inDays <= 1 ? "text-pink-600" : "text-gray-500"}`}>
+                        {describeInDays(b.inDays)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="pt-2 text-center text-xs text-gray-500">
+                You’ll get an email the day before. Turn this off in Settings.
+              </p>
+            </Card>
+          </div>
+        )}
 
         {/* Recently added */}
         <div className="mb-4">
