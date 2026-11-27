@@ -75,3 +75,36 @@ export const deleteContactRoute = (id) => {
 export const importContactsRoute = (contacts) => {
   return axiosInstance.post("/api/v1/contacts/import", { contacts });
 };
+
+// ---- timeline -------------------------------------------------------------
+
+// Newest first: [{ id, type, note, occurredAt, createdAt }]
+export const listInteractionsRoute = (contactId) => {
+  return axiosInstance.get(`/api/v1/contacts/${contactId}/interactions`);
+};
+
+// type: CALL | MEETING | EMAIL | MESSAGE | OTHER; occurredAt defaults to now.
+export const addInteractionRoute = (contactId, payload) => {
+  return axiosInstance.post(`/api/v1/contacts/${contactId}/interactions`, payload);
+};
+
+export const deleteInteractionRoute = (contactId, interactionId) => {
+  return axiosInstance.delete(`/api/v1/contacts/${contactId}/interactions/${interactionId}`);
+};
+
+// ---- birthdays, bulk, merge ----------------------------------------------
+
+// [{ contact, date, inDays, turning }], soonest first
+export const upcomingBirthdaysRoute = (days = 30) => {
+  return axiosInstance.get("/api/v1/contacts/birthdays", { params: { days } });
+};
+
+// action: FAVORITE | UNFAVORITE | ADD_TAGS | REMOVE_TAGS | DELETE; returns { affected }
+export const bulkContactsRoute = (ids, action, tags) => {
+  return axiosInstance.post("/api/v1/contacts/bulk", { ids, action, tags });
+};
+
+// Returns the merged (kept) contact.
+export const mergeContactsRoute = ({ keepId, mergeIds, values, photoFromId }) => {
+  return axiosInstance.post("/api/v1/contacts/merge", { keepId, mergeIds, values, photoFromId });
+};

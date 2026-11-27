@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Modal, Button, Label, TextInput, Textarea } from "flowbite-react";
+import { Modal, Button, Label, TextInput, Textarea, Select } from "flowbite-react";
 import { useDispatch } from "react-redux";
 import {
   FaUser, FaEnvelope, FaPhone, FaStreetView, FaCity,
@@ -11,13 +11,22 @@ import { useContactTags, useSaveContact } from "../hooks/useContacts";
 import TagInput from "./TagInput";
 import ImagePicker from "./ImagePicker";
 import { toastActions } from "../store/toast";
+import { MONTHS, daysInMonth } from "../util/birthday";
 
 const EMPTY = {
   firstName: "", lastName: "", email: "", phone: "",
   bio: "", imageUrl: "",
   street: "", city: "", state: "", country: "", zipCode: "",
   githubUrl: "", linkedinUrl: "", instagramUrl: "",
+  notes: "",
+  // Kept as strings for the inputs; converted to numbers (or null) on save.
+  birthdayMonth: "", birthdayDay: "", birthdayYear: "",
 };
+
+const MAX_NOTES = 10000;
+const THIS_YEAR = new Date().getFullYear();
+
+const toInt = (v) => (v === "" || v === null || v === undefined ? null : Number(v));
 
 /**
  * Shared form for creating and editing a contact. `initialContact` null/undefined
@@ -67,6 +76,10 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
       dispatch(toastActions.setToast({ message: "Enter a valid email", type: "error" }));
       return;
     }
+    if (Boolean(form.birthdayMonth) !== Boolean(form.birthdayDay)) {
+      dispatch(toastActions.setToast({ message: "A birthday needs both a month and a day", type: "error" }));
+      return;
+    }
 
     // Blank strings stay blank (treat as "no value"); backend DTO allows nulls
     // for optional fields but is happy with empty strings too, so no cleanup
@@ -76,6 +89,9 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
     );
 
     payload.tags = tags;
+    payload.birthdayMonth = toInt(form.birthdayMonth);
+    payload.birthdayDay = toInt(form.birthdayDay);
+    payload.birthdayYear = payload.birthdayMonth ? toInt(form.birthdayYear) : null;
     const photo = photoRef.current?.files?.[0] || null;
 
     try {
@@ -181,6 +197,44 @@ const ContactFormModal = ({ isOpen, onClose, onSaved, initialContact }) => {
                   <TextInput id="imageUrl" type="url" placeholder="https://..." {...bind("imageUrl")} />
                 </div>
               )}
+            </section>
+
+            {/* Birthday + notes */}
+            <section className="space-y-4">
+              <h3 className="text-sm font-semibold text-blue-600 border-b border-gray-200 pb-2 uppercase tracking-wider">
+                Birthday &amp; notes
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="birthdayDay" value="Day" className="text-gray-700" />
+                  <Select id="birthdayDay" {...bind("birthdayDay")}>
+                    <option value="">–</option>
+                    {Array.from({ length: daysInMonth(toInt(form.birthdayMonth), toInt(form.birthdayYear)) }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>{i + 1}</option>
+                    ))}
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="birthdayMonth" value="Month" className="text-gray-700" />
+                  <Select id="birthdayMonth" {...bind("birthdayMonth")}>
+                    <option value="">–</option>
+                    {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="birthdayYear" value="Year (optional)" className="text-gray-700" />
+                  <TextInput id="birthdayYear" type="number" inputMode="numeric" min={1900} max={THIS_YEAR}
+                    placeholder="e.g. 1990" disabled={!form.birthdayMonth} {...bind("birthdayYear")} />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <Label htmlFor="notes" value="Notes" className="text-gray-700" />
+                  <span className="text-xs text-gray-400">{(form.notes || "").length}/{MAX_NOTES}</span>
+                </div>
+                <Textarea id="notes" rows={4} maxLength={MAX_NOTES} className="resize-y"
+                  placeholder="How you met, what they're working on, things to remember…" {...bind("notes")} />
+              </div>
             </section>
 
             {/* Address */}

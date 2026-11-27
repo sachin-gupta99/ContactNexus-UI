@@ -7,10 +7,13 @@ import ContactFormModal from "../components/ContactFormModal";
 import ConfirmModal from "../components/ConfirmModal";
 import ImportContactsModal from "../components/ImportContactsModal";
 import DuplicatesModal from "../components/DuplicatesModal";
+import ContactDetailModal from "../components/ContactDetailModal";
+import MergeModal from "../components/MergeModal";
+import BulkActionBar from "../components/BulkActionBar";
 import {
-  useContactList, useContactTags, useDeleteContact, useDeleteTag, useDuplicates, useToggleFavorite,
+  useBulkAction, useContactList, useContactTags, useDeleteContact, useDeleteTag, useDuplicates, useToggleFavorite,
 } from "../hooks/useContacts";
-import { buildVCard, contactToCard, shareVCard } from "../util/vcard";
+import { buildVCard, contactToCard, downloadVCard, shareVCard } from "../util/vcard";
 import { exportAllContacts } from "../util/exportContacts";
 import { useDispatch } from "react-redux";
 import { toastActions } from "../store/toast";
@@ -25,6 +28,7 @@ const SORTS = {
   "name-desc": { label: "Name (Z–A)", sort: "firstName,desc" },
   recent: { label: "Recently added", sort: "createdAt,desc" },
   favourites: { label: "Favourites first", sort: ["favorite,desc", "firstName,asc"] },
+  contacted: { label: "Recently contacted", sort: ["lastContactedAt,desc", "firstName,asc"] },
 };
 
 const displayName = (c) => [c.firstName, c.lastName].filter(Boolean).join(" ") || c.email;
@@ -42,6 +46,12 @@ const Contacts = () => {
   const [importOpen, setImportOpen] = useState(false);
   const [duplicatesOpen, setDuplicatesOpen] = useState(false);
   const [tagToDelete, setTagToDelete] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
+  const [mergeGroup, setMergeGroup] = useState(null);
+  // Selection survives paging and filtering: id -> contact (needed for export).
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState(() => new Map());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const dispatch = useDispatch();
   const toast = (message, type = "success") => dispatch(toastActions.setToast({ message, type }));
@@ -66,6 +76,7 @@ const Contacts = () => {
   const tagsQuery = useContactTags();
   const duplicates = useDuplicates().data ?? [];
   const deleteTag = useDeleteTag();
+  const bulk = useBulkAction();
   const page = listQuery.data ?? EMPTY_PAGE;
   const contacts = page.content;
 
@@ -185,6 +196,44 @@ const Contacts = () => {
     }
   };
 
+  // ---- selection + bulk actions -----------------------------------------
+
+  const toggleSelected = (contact, on) => setSelected((prev) => {
+    const next = new Map(prev);
+    if (on) next.set(contact.id, contact);
+    else next.delete(contact.id);
+    return next;
+  });
+  const allOnPageSelected = contacts.length > 0 && contacts.every((c) => selected.has(c.id));
+  const selectPage = () => setSelected((prev) => {
+    const next = new Map(prev);
+    contacts.forEach((c) => (allOnPageSelected ? next.delete(c.id) : next.set(c.id, c)));
+    return next;
+  });
+  const stopSelecting = () => {
+    setSelectMode(false);
+    setSelected(new Map());
+  };
+
+  const runBulk = (action, tags) => {
+    const ids = [...selected.keys()];
+    bulk.mutate({ ids, action, tags }, {
+      onSuccess: ({ affected }) => {
+        const verb = { FAVORITE: "Favourited", UNFAVORITE: "Unfavourited", ADD_TAGS: "Tagged", REMOVE_TAGS: "Untagged", DELETE: "Deleted" }[action];
+        toast(`${verb} ${affected} contact${affected === 1 ? "" : "s"}`);
+        if (action === "DELETE") stopSelecting();
+        else setSelected(new Map()); // the cached copies are now stale
+      },
+      onError: (err) => toast(err.response?.data?.message || "That didn't work", "error"),
+    });
+  };
+
+  const exportSelected = () => {
+    const list = [...selected.values()];
+    downloadVCard(list.map((c) => buildVCard(contactToCard(c))).join("\r\n"), `ContactNexus_${list.length}_contacts`);
+    toast(`Exported ${list.length} contact${list.length === 1 ? "" : "s"}`);
+  };
+
   const handleImported = ({ imported, skippedDuplicates, invalid = 0, partial }) => {
     const parts = [`Imported ${imported} contact${imported === 1 ? "" : "s"}`];
     if (skippedDuplicates) parts.push(`${skippedDuplicates} already existed`);
@@ -212,6 +261,13 @@ const Contacts = () => {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <Button
+                color={selectMode ? "purple" : "light"}
+                className="w-fit font-semibold"
+                onClick={() => (selectMode ? stopSelecting() : setSelectMode(true))}
+              >
+                {selectMode ? "Done" : "Select"}
+              </Button>
               <Button color="light" className="w-fit font-semibold" onClick={() => setImportOpen(true)}>
                 <FaFileImport className="w-4 h-4 mr-2" />
                 Import
@@ -275,7 +331,7 @@ const Contacts = () => {
             id="search"
             type="text"
             icon={FaSearch}
-            placeholder="Search by name or email..."
+            placeholder="Search by name or email (typos are fine)…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full sm:flex-1"
@@ -308,6 +364,26 @@ const Contacts = () => {
               </button>
             )}
           </div>
+        )}
+
+        {selectMode && selected.size > 0 && (
+          <BulkActionBar
+            count={selected.size}
+            busy={bulk.isPending}
+            tagOptions={tagsQuery.data?.map((t) => t.name) ?? []}
+            onAction={runBulk}
+            onExport={exportSelected}
+            onDelete={() => setBulkDeleteOpen(true)}
+            onClear={() => setSelected(new Map())}
+            onSelectPage={selectPage}
+            allOnPageSelected={allOnPageSelected}
+          />
+        )}
+        {selectMode && selected.size === 0 && (
+          <p className="mb-6 text-sm text-gray-600" role="status">
+            Tick contacts to act on them together.{" "}
+            <button type="button" className="font-medium text-purple-700 hover:underline" onClick={selectPage}>Select this page</button>
+          </p>
         )}
 
         {/* Duplicates */}
@@ -362,6 +438,12 @@ const Contacts = () => {
                 onDelete={() => setDeleteTarget(c)}
                 tags={c.tags}
                 onTagClick={setTagFilter}
+                lastContactedAt={c.lastContactedAt}
+                birthday={c}
+                onOpen={() => setDetailTarget(c)}
+                selectable={selectMode}
+                selected={selected.has(c.id)}
+                onSelect={(on) => toggleSelected(c, on)}
               />
             ))}
           </div>
@@ -422,7 +504,30 @@ const Contacts = () => {
         onClose={() => setDuplicatesOpen(false)}
         groups={duplicates}
         onEdit={(c) => { setDuplicatesOpen(false); openEdit(c); }}
+        onMerge={(group) => { setDuplicatesOpen(false); setMergeGroup(group); }}
         onDelete={(c) => { setDuplicatesOpen(false); setDeleteTarget(c); }}
+      />
+
+      <ContactDetailModal
+        contact={detailTarget}
+        onClose={() => setDetailTarget(null)}
+        onEdit={(c) => { setDetailTarget(null); openEdit(c); }}
+      />
+
+      <MergeModal
+        contacts={mergeGroup}
+        onClose={() => setMergeGroup(null)}
+        onMerged={() => setMergeGroup(null)}
+      />
+
+      <ConfirmModal
+        isOpen={bulkDeleteOpen}
+        onClose={() => !bulk.isPending && setBulkDeleteOpen(false)}
+        onConfirm={() => { runBulk("DELETE"); setBulkDeleteOpen(false); }}
+        title={`Delete ${selected.size} contact${selected.size === 1 ? "" : "s"}?`}
+        message="Their notes, timelines and photos are deleted too. This can't be undone."
+        confirmLabel="Delete"
+        busy={bulk.isPending}
       />
 
       <ConfirmModal

@@ -32,7 +32,12 @@
 - **Tags (groups)** — add tags in the contact form (suggestions from existing ones), filter with chips, export just one tag as `.vcf` (`CATEGORIES`), delete a tag everywhere. Imports read vCard `CATEGORIES` and Google `Labels` / `Group Membership`.
 - **Contact photos** — upload a photo per contact (private S3, presigned URLs) or keep using an image link; remove it any time.
 - **Sorting** — name A–Z / Z–A, recently added, or favourites first; kept in the URL (`?sort=`).
-- **Duplicate detection** — a banner flags contacts sharing an email or phone number, with a review list to edit or delete the extras.
+- **Duplicate detection and merge** — a banner flags contacts sharing an email or phone number; merge a group by picking each field's value (tags, notes and timelines are combined, you choose the photo), or edit/delete the extras.
+- **Notes and timeline** — click a contact's name for its detail view: notes, birthday and a timeline of calls, meetings, emails and messages. Cards show "contacted 3 days ago"; sort by "Recently contacted".
+- **Birthdays** — day, month and optional year on each contact; a badge on cards in the week before, an "Upcoming birthdays" list on Home, and a reminder email the day before (toggle in Settings).
+- **Bulk actions** — "Select" mode with a bar to favourite, tag, untag, export or delete many contacts at once (selection survives paging).
+- **Shareable card** — Settings creates a public link and QR code for your own card with the fields you choose; `/c/:token` shows it with a "Save contact" vCard button. Rotate or turn it off any time.
+- **Typo-tolerant search** — "rvi" finds Ravi (pg_trgm on the server).
 - **vCard sharing** — share any contact through the native share sheet (falls back to a `.vcf` download), share your own card from the profile menu, or export every contact as one `.vcf`.
 - **Live dashboard** — home and profile show real totals, favourites, contacts added this week, and the five most recent contacts.
 - **Account settings** — change password (signs out other devices), sign out everywhere, delete account (password-confirmed).
@@ -69,6 +74,7 @@ See [ContactNexus-Service's refresh-token design](https://github.com/sachin-gupt
 | `/profile` | `pages/Profile.jsx` | ✅ |
 | `/settings` | `pages/Settings.jsx` | ✅ |
 | `/privacy`, `/terms` | `pages/Legal.jsx` | public |
+| `/c/:token` | `pages/PublicCard.jsx` | public (the token is the permission) |
 | `*` | `pages/NotFound.jsx` | public |
 
 ## Quick start
@@ -151,7 +157,9 @@ src/
 
 ## Deployment
 
-Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call). A catch-all rewrite to `/index.html` handles SPA deep links.
+Production lives on **Vercel**, auto-deployed from `main` with no workflow file — `vercel.json` handles the build and reverse-proxies `/api/*` to the Render backend so the browser sees one origin (keeps the refresh cookie on `SameSite=Lax` and skips a CORS preflight per call). A catch-all route to `/index.html` handles SPA deep links.
+
+`vercel.json` uses `routes` (not `rewrites`) because only routes support [`transforms`](https://vercel.com/docs/routing/rewrites): the `/api` route adds an `x-origin-secret` header from the **`ORIGIN_SECRET`** project environment variable. The backend uses it to tell requests that came through Vercel (whose `X-Forwarded-For` Vercel overwrites, so it can be trusted) from direct calls to Render (whose `X-Forwarded-For` can be forged). Set `ORIGIN_SECRET` in Vercel before setting the same value as `PROXY_SECRET` on Render.
 
 Full walkthrough: [DEPLOY.md](DEPLOY.md).
 
@@ -173,6 +181,7 @@ Full walkthrough: [DEPLOY.md](DEPLOY.md).
 - [x] CI: lint, test, build on every PR
 - [x] TanStack Query for server state
 - [x] Contact tags / groups, photos, sorting, duplicate detection
+- [x] Notes, timeline, birthdays + reminders, merge, bulk actions, shareable card, fuzzy search
 - [x] "Signed-in devices" screen with per-device sign-out
 - [x] Email verification and account lockout
 - [ ] Migration to TypeScript
