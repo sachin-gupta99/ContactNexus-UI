@@ -428,7 +428,7 @@ const Contacts = () => {
                 key={c.id}
                 name={displayName(c)}
                 work={c.bio || ""}
-                number={c.phone || "—"}
+                number={c.phone}
                 email={c.email}
                 image={c.imageUrl}
                 isFavorite={c.favorite}

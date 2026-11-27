@@ -1,11 +1,49 @@
+import { useEffect, useState } from "react";
 import {
-  FaPhone, FaEnvelope, FaStar, FaRegStar, FaShare,
-  FaPencilAlt, FaTrash,
+  FaBirthdayCake, FaEnvelope, FaPencilAlt, FaPhone, FaRegClock, FaRegStar, FaShareAlt, FaStar, FaTrash,
 } from "react-icons/fa";
-import { Card, Button, Avatar } from "flowbite-react";
-import { FaBirthdayCake, FaRegClock } from "react-icons/fa";
 import { timeAgo } from "../util/time";
 import { describeInDays, nextBirthday } from "../util/birthday";
+
+const initials = (name) => {
+  const parts = (name || "?").trim().split(/\s+/);
+  return ((parts[0]?.[0] || "?") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+};
+
+/** Photo, or the initials on a gradient when there's no photo or it fails to load. */
+const ContactAvatar = ({ name, image }) => {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [image]);
+  if (image && !broken) {
+    return (
+      <img src={image} alt="" onError={() => setBroken(true)}
+        className="h-20 w-20 rounded-full object-cover ring-4 ring-white shadow-md" />
+    );
+  }
+  return (
+    <div aria-hidden className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-2xl font-semibold text-white ring-4 ring-white shadow-md">
+      {initials(name)}
+    </div>
+  );
+};
+
+/** One button in the footer bar. Renders a link when `href` is set, otherwise a button. */
+const Action = ({ label, icon: Icon, href, onClick, disabled, tone = "default" }) => {
+  const tones = {
+    default: "hover:bg-purple-50 hover:text-purple-700",
+    danger: "hover:bg-red-50 hover:text-red-600",
+  };
+  const cls = `flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors focus:outline-none focus-visible:bg-purple-50 ${
+    disabled ? "cursor-not-allowed text-gray-300" : `text-gray-600 ${tones[tone]}`}`;
+  const body = <><Icon className="h-4 w-4" aria-hidden />{label}</>;
+  if (href && !disabled) return <a href={href} className={cls} aria-label={label}>{body}</a>;
+  return (
+    <button type="button" className={cls} aria-label={label} disabled={disabled}
+      onClick={(e) => { e.preventDefault(); onClick?.(); }}>
+      {body}
+    </button>
+  );
+};
 
 const ContactCard = ({
   name,
@@ -29,11 +67,18 @@ const ContactCard = ({
 }) => {
   const upcoming = birthday ? nextBirthday(birthday) : null;
   const soon = upcoming && upcoming.inDays <= 7 ? upcoming : null;
+  const phone = number?.trim();
+
   return (
-    <Card className={`relative max-w-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white rounded-xl overflow-hidden ${
-      selected ? "ring-2 ring-purple-500" : ""}`}>
+    <article
+      className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
+        selected ? "border-purple-500 ring-2 ring-purple-500" : "border-gray-200"}`}
+    >
+      {/* Soft header band behind the avatar */}
+      <div aria-hidden className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-100" />
+
       {selectable && (
-        <label className="absolute left-3 top-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-white/90 shadow">
+        <label className="absolute left-3 top-3 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md bg-white shadow-sm">
           <input
             type="checkbox"
             checked={selected}
@@ -44,176 +89,99 @@ const ContactCard = ({
         </label>
       )}
 
-      {/* Header */}
-      <div className="bg-white p-0 pb-0">
-        <div className="flex items-start space-x-3">
-          <div className="relative flex-shrink-0">
-            <Avatar
-              img={image || undefined}
-              placeholderInitials={(name || "?").charAt(0).toUpperCase()}
-              rounded
-              size="md"
-              className="ring-2 ring-gray-100"
-            />
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-            </div>
-          </div>
+      <button
+        type="button"
+        aria-label={isFavorite ? `Remove ${name} from favourites` : `Add ${name} to favourites`}
+        aria-pressed={isFavorite}
+        onClick={(e) => { e.preventDefault(); onToggleFavorite?.(); }}
+        className="absolute right-3 top-3 z-10 rounded-full bg-white/80 p-2 shadow-sm transition-colors hover:bg-white"
+      >
+        {isFavorite
+          ? <FaStar className="h-4 w-4 text-yellow-400" />
+          : <FaRegStar className="h-4 w-4 text-gray-400 hover:text-yellow-500" />}
+      </button>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-gray-900 mb-1 leading-tight truncate">
-                  {onOpen ? (
-                    <button type="button" onClick={onOpen} className="truncate text-left hover:text-purple-700 hover:underline">
-                      {name}
-                    </button>
-                  ) : name}
-                </h3>
-                <p className="text-gray-600 font-medium text-sm mb-2 leading-relaxed line-clamp-2">
-                  {work}
-                </p>
-                {tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {tags.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => onTagClick?.(t)}
-                        title={`Show contacts tagged ${t}`}
-                        className="rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 hover:bg-purple-100"
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {(lastContactedAt || soon) && (
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mb-1">
-                    {soon && (
-                      <span className="inline-flex items-center gap-1 font-medium text-pink-600">
-                        <FaBirthdayCake className="h-3 w-3" aria-hidden />
-                        Birthday {describeInDays(soon.inDays)}{soon.turning ? ` (${soon.turning})` : ""}
-                      </span>
-                    )}
-                    {lastContactedAt && (
-                      <span className="inline-flex items-center gap-1" title={new Date(lastContactedAt).toLocaleString()}>
-                        <FaRegClock className="h-3 w-3" aria-hidden />
-                        Contacted {timeAgo(lastContactedAt)}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
+      {/* Identity */}
+      <div className="relative flex flex-col items-center px-5 pt-6 text-center">
+        <ContactAvatar name={name} image={image} />
+        <h3 className="mt-3 line-clamp-2 break-words text-lg font-semibold leading-snug text-gray-900">
+          {onOpen ? (
+            <button type="button" onClick={onOpen} title="Open notes and timeline"
+              className="rounded hover:text-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500">
+              {name}
+            </button>
+          ) : name}
+        </h3>
+        {work && <p className="mt-0.5 line-clamp-2 text-sm text-gray-500">{work}</p>}
 
-              {/* Action buttons: edit, delete, favorite */}
-              <div className="flex items-center gap-1 shrink-0">
-                {onEdit && (
-                  <button
-                    type="button"
-                    aria-label="Edit contact"
-                    onClick={(e) => { e.preventDefault(); onEdit(); }}
-                    className="p-2 rounded-lg hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition-colors"
-                  >
-                    <FaPencilAlt className="w-4 h-4" />
-                  </button>
-                )}
-                {onDelete && (
-                  <button
-                    type="button"
-                    aria-label="Delete contact"
-                    onClick={(e) => { e.preventDefault(); onDelete(); }}
-                    className="p-2 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                  >
-                    <FaTrash className="w-4 h-4" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  aria-label={isFavorite ? "Unfavorite" : "Favorite"}
-                  onClick={(e) => { e.preventDefault(); onToggleFavorite?.(); }}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  {isFavorite ? (
-                    <FaStar className="w-5 h-5 text-yellow-500" />
-                  ) : (
-                    <FaRegStar className="w-5 h-5 text-gray-400 hover:text-yellow-500" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Details */}
-      <div className="px-4 pb-3">
-        <div className="space-y-2">
-          <div className="bg-gray-50 rounded p-2 hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center flex-shrink-0">
-                <FaPhone className="w-3 h-3 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 font-medium">Phone</p>
-                <p className="font-semibold text-gray-900 text-sm truncate">{number}</p>
-              </div>
-            </div>
-            {number && number !== "—" ? (
-              <a href={`tel:${number}`} className="block">
-                <Button size="xs" color="blue" className="w-full text-xs">
-                  <FaPhone className="w-2.5 h-2.5 mr-1" />
-                  Call
-                </Button>
-              </a>
-            ) : (
-              <Button size="xs" color="blue" className="w-full text-xs" disabled>
-                <FaPhone className="w-2.5 h-2.5 mr-1" />
-                Call
-              </Button>
+        {(soon || lastContactedAt) && (
+          <div className="mt-3 flex flex-wrap justify-center gap-1.5 text-xs">
+            {soon && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 px-2 py-0.5 font-medium text-pink-700">
+                <FaBirthdayCake className="h-3 w-3" aria-hidden />
+                Birthday {describeInDays(soon.inDays)}{soon.turning ? ` · turns ${soon.turning}` : ""}
+              </span>
+            )}
+            {lastContactedAt && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-gray-600"
+                title={new Date(lastContactedAt).toLocaleString()}>
+                <FaRegClock className="h-3 w-3" aria-hidden />
+                Contacted {timeAgo(lastContactedAt)}
+              </span>
             )}
           </div>
+        )}
 
-          <div className="bg-gray-50 rounded p-2 hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center flex-shrink-0">
-                <FaEnvelope className="w-3 h-3 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500 font-medium">Email</p>
-                <p className="font-semibold text-gray-900 text-sm break-all">{email || "Not provided"}</p>
-              </div>
-            </div>
-            {email ? (
-              <a href={`mailto:${email}`} className="block">
-                <Button size="xs" color="green" className="w-full text-xs">
-                  <FaEnvelope className="w-2.5 h-2.5 mr-1" />
-                  Email
-                </Button>
-              </a>
-            ) : (
-              <Button size="xs" color="green" className="w-full text-xs" disabled>
-                <FaEnvelope className="w-2.5 h-2.5 mr-1" />
-                Email
-              </Button>
-            )}
+        {tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+            {tags.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onTagClick?.(t)}
+                title={`Show contacts tagged ${t}`}
+                className="rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700 hover:bg-purple-100"
+              >
+                {t}
+              </button>
+            ))}
           </div>
+        )}
+      </div>
+
+      {/* Details */}
+      <dl className="mx-5 mt-4 space-y-2 border-t border-gray-100 pt-4 text-sm">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <dt className="sr-only">Email</dt>
+          <FaEnvelope className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+          <dd className="min-w-0 truncate">
+            {email
+              ? <a href={`mailto:${email}`} title={email} className="text-gray-700 hover:text-purple-700 hover:underline">{email}</a>
+              : <span className="text-gray-400">No email</span>}
+          </dd>
+        </div>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <dt className="sr-only">Phone</dt>
+          <FaPhone className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+          <dd className="min-w-0 truncate">
+            {phone
+              ? <a href={`tel:${phone}`} className="text-gray-700 hover:text-purple-700 hover:underline">{phone}</a>
+              : <span className="text-gray-400">No phone number</span>}
+          </dd>
+        </div>
+      </dl>
+
+      {/* Actions: pinned to the bottom so cards in a row line up */}
+      <div className="mt-auto pt-4">
+        <div className="flex divide-x divide-gray-100 border-t border-gray-100">
+          <Action label="Call" icon={FaPhone} href={phone ? `tel:${phone}` : undefined} disabled={!phone} />
+          <Action label="Email" icon={FaEnvelope} href={email ? `mailto:${email}` : undefined} disabled={!email} />
+          <Action label="Share" icon={FaShareAlt} onClick={onShare} disabled={!onShare} />
+          {onEdit && <Action label="Edit" icon={FaPencilAlt} onClick={onEdit} />}
+          {onDelete && <Action label="Delete" icon={FaTrash} onClick={onDelete} tone="danger" />}
         </div>
       </div>
-
-      {/* Share footer (kept) */}
-      <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
-        <Button
-          color="light"
-          size="sm"
-          className="w-full px-4 font-semibold border-gray-300"
-          onClick={(e) => { e.preventDefault(); onShare?.(); }}
-        >
-          <FaShare className="w-3.5 h-3.5 mr-2" />
-          Share
-        </Button>
-      </div>
-    </Card>
+    </article>
   );
 };
 
